@@ -5,6 +5,10 @@ require('dotenv').config();
 
 // Routes 
 const clientsRoutes = require('./routes/clients.routes');
+const authRoutes = require('./routes/auth.routes')
+
+// Auth
+const { authorizeRole } = require('./middleware/auth');
 
 const app = express();
 
@@ -15,11 +19,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // routes
 app.use('/api/clients', clientsRoutes);
+app.use('/api/auth', authRoutes);
+
+
 
 // server
 app.listen(process.env.PORT, () => {
     console.log(`Listening on port ${process.env.PORT}`);
 });
+
 
 // index.html
 app.get("/*", (req, res) => {

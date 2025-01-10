@@ -182,7 +182,6 @@ ALTER TABLE Proprietaire ADD CONSTRAINT fk_personnel FOREIGN KEY (personnel_id) 
 CREATE ROLE proprietaire WITH LOGIN PASSWORD 'proprietaire_password';
 CREATE ROLE moniteur WITH LOGIN PASSWORD 'moniteur_password';
 
-
 -- Droits pour l'administrateur
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO administrateur;
 GRANT CREATE, DROP ON ALL TABLES IN SCHEMA public TO administrateur;
