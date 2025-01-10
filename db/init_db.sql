@@ -157,7 +157,6 @@ CREATE TABLE Moniteur (
 -- Table Proprietaire
 CREATE TABLE Proprietaire (
     id SERIAL PRIMARY KEY,
-    permis VARCHAR(255) NOT NULL,
     personnel_id INT
 );
 
