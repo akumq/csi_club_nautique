@@ -183,7 +183,7 @@ CREATE ROLE moniteur WITH LOGIN PASSWORD 'moniteur_password';
 
 -- Droits pour l'administrateur
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO administrateur;
-GRANT CREATE, DROP ON ALL TABLES IN SCHEMA public TO administrateur;
+GRANT CREATE, DROP ON SCHEMA public TO administrateur;  -- Grant CREATE and DROP on schema, not tables
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO administrateur;
 
 -- Droits pour le propriétaire

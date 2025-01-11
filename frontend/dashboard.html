@@ -1,88 +1,258 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Clients</title>
+    <title>Dashboard - Gestion des Clients</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            width: 250px;
+        }
+
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">MyApp</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="logoutButton">Logout</a>
-                    </li>
-                </ul>
-            </div>
+    <!-- Sidebar -->
+    <nav class="sidebar bg-light">
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        Clients
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        Réservations
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        Paramètres
+                    </a>
+                </li>
+                <li class="nav-item mt-3">
+                    <button class="btn btn-outline-danger mx-3" id="logoutButton">
+                        Déconnexion
+                    </button>
+                </li>
+            </ul>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <h1>Clients List</h1>
-        <table class="table table-striped mt-4" id="clientsTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nom</th>
-                    <th>Prénom</th>
-                    <th>Email</th>
-                    <th>Téléphone</th>
-                    <th>Niveau</th>
-                    <th>Quantité Forfait</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dynamic content will be inserted here -->
-            </tbody>
-        </table>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Gestion des Clients</h1>
+                <button class="btn btn-primary" id="newClientButton">
+                    Nouveau Client
+                </button>
+            </div>
+
+            <!-- Table des clients -->
+            <div class="table-responsive">
+                <table class="table" id="clientsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Niveau</th>
+                            <th>Quantité Forfait</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Contenu dynamique -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Création/Édition Client -->
+    <div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createClientModalLabel">Nouveau Client</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="clientForm">
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="prenom" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="prenom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="mail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="mail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="telephone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="niveau" class="form-label">Niveau</label>
+                            <select class="form-control" id="niveau" required>
+                                <!-- Options dynamiques ajoutées ici -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="quantiteForfait" class="form-label">Quantité Forfait</label>
+                            <input type="number" class="form-control" id="quantiteForfait" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="clientForm" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/static/js/auth.js"></script>
+    <script src="/static/js/model/client.js"></script>
+
+    <!-- Scripts -->
     <script>
-        async function fetchClients() {
-            const apiClient = new APIClient('http://localhost:3000');
-
+        const clientManager = new ClientManager('http://localhost:3000', 'clientsTable');
+        
+        async function checkTokenValidity() {
+            const token = sessionStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+        
             try {
-                const clients = await apiClient.request('/api/clients');
-                const tableBody = document.getElementById('clientsTable').querySelector('tbody');
-                tableBody.innerHTML = ''; // Clear previous content
+                const response = await fetch('http://localhost:3000/api/auth/verifyToken', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+        
+                if (!response.ok) {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Erreur lors de la vérification du token:', error);
+                window.location.href = '/login.html';
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            checkTokenValidity();
+        });
 
-                clients.forEach(client => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${client.id}</td>
-                        <td>${client.nom}</td>
-                        <td>${client.prenom}</td>
-                        <td>${client.mail}</td>
-                        <td>${client.telephone}</td>
-                        <td>${client.niveau}</td>
-                        <td>${client.quantiteforfait}</td>
-                    `;
-                    tableBody.appendChild(row);
+        // Ajout d'un nouveau client
+        document.getElementById('newClientButton').addEventListener('click', () => {
+            document.getElementById('clientForm').reset(); // Reset le formulaire avant d'afficher la modal
+            const modalTitle = document.querySelector('.modal-title');
+            modalTitle.textContent = 'Nouveau Client';
+            const form = document.getElementById('clientForm');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const clientData = {
+                    nom: document.getElementById('nom').value,
+                    prenom: document.getElementById('prenom').value,
+                    mail: document.getElementById('mail').value,
+                    telephone: document.getElementById('telephone').value,
+                    niveau: document.getElementById('niveau').value,
+                    quantiteForfait: Number(document.getElementById('quantiteForfait').value)
+                };
+                try {
+                    await clientManager.createClient(clientData);
+                    await clientManager.loadAllClients();
+                    $('#createClientModal').modal('hide'); // Ferme le modal
+                } catch (error) {
+                    alert('Erreur lors de la création du client.');
+                }
+            };
+        });
+
+        // Déconnexion
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            sessionStorage.removeItem('authToken');
+            window.location.href = '/login.html';
+        });
+
+        // Charger les énumérations (Niveaux)
+        async function loadEnums() {
+            try {
+                const response = await fetch('http://localhost:3000/api/enum/enums', {
+                    headers: { 'Authorization': `Bearer ${sessionStorage.getItem('authToken')}` }
+                });
+                const enums = await response.json();
+                const niveauSelect = document.getElementById('niveau');
+                niveauSelect.innerHTML = '';
+                enums.ENiveau.forEach(niveau => {
+                    const option = document.createElement('option');
+                    option.value = niveau;
+                    option.textContent = niveau;
+                    niveauSelect.appendChild(option);
                 });
             } catch (error) {
-                console.error('Error fetching clients:', error);
-                alert('Failed to load clients list. Please try again.');
+                console.error('Erreur chargement enums:', error);
+                alert('Erreur lors du chargement des niveaux.');
             }
         }
 
-        // Load clients on page load
-        fetchClients();
+        // Initialiser l'application
+        async function initializeApp() {
+            loadEnums();
+            clientManager.loadAllClients();
+        }
 
-        // Logout functionality
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            sessionStorage.removeItem('authToken');
-            alert('You have been logged out.');
-            window.location.href = '/login.html';
-        });
+        window.addEventListener('load', initializeApp);
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -30,24 +30,25 @@ class APIClient {
     }
 
     async request(endpoint, options = {}) {
+
         if (!this.token) {
             throw new Error('No token available. Please login first.');
         }
-
+    
         const headers = {
             ...options.headers,
-            Authorization: `Bearer ${this.token}`
+            Authorization: `Bearer ${this.token}`,
         };
-
+    
         const response = await fetch(`${this.baseURL}${endpoint}`, {
             ...options,
             headers
         });
-
+    
         if (!response.ok) {
             throw new Error('Request failed');
         }
-
+    
         return await response.json();
     }
 }

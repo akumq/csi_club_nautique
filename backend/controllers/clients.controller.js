@@ -28,7 +28,13 @@ exports.getClientById = async (req, res) => {
 
 // Créer un nouveau client
 exports.createClient = async (req, res) => {
+    console.log(req.body);
     const { nom, prenom, mail, telephone, niveau, quantiteForfait } = req.body;
+    quantiteForfait = parseInt(quantiteForfait, 10); 
+    // Vérification que tous les champs sont présents
+    if (!nom || !prenom || !mail || !telephone || !niveau || quantiteForfait === undefined) {
+        return res.status(400).json({ error: 'Tous les champs doivent être remplis' });
+    }
     try {
         const result = await pool.query(
             'INSERT INTO client (nom, prenom, mail, telephone, niveau, quantiteForfait) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
@@ -40,6 +46,7 @@ exports.createClient = async (req, res) => {
         res.status(500).json({ error: 'Une erreur est survenue' });
     }
 };
+
 
 // Mettre à jour un client
 exports.updateClient = async (req, res) => {

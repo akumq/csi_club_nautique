@@ -13,6 +13,7 @@ const proprietaireRoutes = require('./routes/proprietaire.routes')
 const coursRouter = require('./routes/cours.routes')
 const reservationsRouter = require('./routes/reservations.routes')
 const locationsRouter = require('./routes/locations.routes')
+const enumRoutes = require('./routes/enum.routes');
 
 // Auth
 const { authorizeRole } = require('./middleware/auth');
@@ -33,6 +34,7 @@ app.use('/api/proprietaires', proprietaireRoutes);
 app.use('/api/cours', coursRouter);
 app.use('/api/reservations', reservationsRouter);
 app.use('/api/locations', locationsRouter);
+app.use('/api/enum', enumRoutes);
 
 // server
 app.listen(process.env.PORT, () => {
@@ -40,7 +42,7 @@ app.listen(process.env.PORT, () => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/frontend', 'index.html'));
+    res.sendFile(path.join(__dirname, '/frontend', 'dashboard.html'));
 });
 
 // Route pour servir tous les fichiers html
