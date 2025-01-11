@@ -39,6 +39,10 @@ app.listen(process.env.PORT, () => {
     console.log(`Listening on port ${process.env.PORT}`);
 });
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '/frontend', 'index.html'));
+});
+
 // Route pour servir tous les fichiers html
 app.get("/*", (req, res, next) => {
     let requestedFile = req.params[0];  // Capture le chemin après "/" (par exemple, "about")
