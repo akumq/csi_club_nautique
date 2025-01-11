@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gestion des Clients</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         .sidebar {
             position: fixed;
@@ -50,11 +51,6 @@
         <div class="sidebar-sticky">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">
-                        Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="#">
                         Clients
                     </a>
@@ -62,11 +58,6 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#">
                         Réservations
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        Paramètres
                     </a>
                 </li>
                 <li class="nav-item mt-3">
@@ -111,148 +102,155 @@
         </div>
     </main>
 
-    <!-- Modal Création/Édition Client -->
-    <div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createClientModalLabel">Nouveau Client</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="clientForm">
-                        <div class="mb-3">
-                            <label for="nom" class="form-label">Nom</label>
-                            <input type="text" class="form-control" id="nom" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="prenom" class="form-label">Prénom</label>
-                            <input type="text" class="form-control" id="prenom" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="mail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="mail" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="telephone" class="form-label">Téléphone</label>
-                            <input type="tel" class="form-control" id="telephone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="niveau" class="form-label">Niveau</label>
-                            <select class="form-control" id="niveau" required>
-                                <!-- Options dynamiques ajoutées ici -->
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="quantiteForfait" class="form-label">Quantité Forfait</label>
-                            <input type="number" class="form-control" id="quantiteForfait" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" form="clientForm" class="btn btn-primary">Enregistrer</button>
+    <template id="clientModalTemplate">
+        <div class="modal fade" id="dynamicClientModal" tabindex="-1" aria-labelledby="dynamicClientModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Titre du Modal</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="dynamicClientForm">
+                            <div class="mb-3">
+                                <label for="nom" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="nom" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="prenom" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="prenom" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="mail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="mail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="telephone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="telephone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="niveau" class="form-label">Niveau</label>
+                                <select class="form-control" id="niveau"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantiteForfait" class="form-label">Quantité Forfait</label>
+                                <input type="number" class="form-control" id="quantiteForfait" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" form="dynamicClientForm" class="btn btn-primary">Enregistrer</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </template>
 
+    <!-- Scripts -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/model/client.js"></script>
 
-    <!-- Scripts -->
     <script>
         const clientManager = new ClientManager('http://localhost:3000', 'clientsTable');
-        
-        async function checkTokenValidity() {
-            const token = sessionStorage.getItem('authToken');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
-        
-            try {
-                const response = await fetch('http://localhost:3000/api/auth/verifyToken', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-        
-                if (!response.ok) {
-                    window.location.href = '/login.html';
-                }
-            } catch (error) {
-                console.error('Erreur lors de la vérification du token:', error);
-                window.location.href = '/login.html';
-            }
-        }
-        
-        window.addEventListener('load', () => {
-            checkTokenValidity();
-        });
 
-        // Ajout d'un nouveau client
-        document.getElementById('newClientButton').addEventListener('click', () => {
-            document.getElementById('clientForm').reset(); // Reset le formulaire avant d'afficher la modal
-            const modalTitle = document.querySelector('.modal-title');
-            modalTitle.textContent = 'Nouveau Client';
-            const form = document.getElementById('clientForm');
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-                const clientData = {
-                    nom: document.getElementById('nom').value,
-                    prenom: document.getElementById('prenom').value,
-                    mail: document.getElementById('mail').value,
-                    telephone: document.getElementById('telephone').value,
-                    niveau: document.getElementById('niveau').value,
-                    quantiteForfait: Number(document.getElementById('quantiteForfait').value)
-                };
-                try {
-                    await clientManager.createClient(clientData);
-                    await clientManager.loadAllClients();
-                    $('#createClientModal').modal('hide'); // Ferme le modal
-                } catch (error) {
-                    alert('Erreur lors de la création du client.');
-                }
-            };
-        });
-
-        // Déconnexion
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            sessionStorage.removeItem('authToken');
+// Vérification de la validité du token
+async function checkTokenValidity() {
+        const token = sessionStorage.getItem('authToken');
+        if (!token) {
             window.location.href = '/login.html';
-        });
+            return;
+        }
 
-        // Charger les énumérations (Niveaux)
-        async function loadEnums() {
-            try {
-                const response = await fetch('http://localhost:3000/api/enum/enums', {
-                    headers: { 'Authorization': `Bearer ${sessionStorage.getItem('authToken')}` }
-                });
-                const enums = await response.json();
-                const niveauSelect = document.getElementById('niveau');
-                niveauSelect.innerHTML = '';
-                enums.ENiveau.forEach(niveau => {
-                    const option = document.createElement('option');
-                    option.value = niveau;
-                    option.textContent = niveau;
-                    niveauSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Erreur chargement enums:', error);
-                alert('Erreur lors du chargement des niveaux.');
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/verifyToken', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                window.location.href = '/login.html';
             }
+        } catch (error) {
+            console.log('Erreur lors de la vérification du token:', error);
+            window.location.href = '/login.html';
+        }
+    }
+
+    // Gestion de l'événement pour afficher le formulaire de création
+    document.getElementById('newClientButton').addEventListener('click', () => {
+        clientManager.showCreateForm();
+    });
+
+    // Gestion de la déconnexion
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        sessionStorage.removeItem('authToken');
+        window.location.href = '/login.html';
+    });
+
+    // Chargement des énumérations (niveaux)
+    async function loadEnums() {
+        try {
+            const response = await fetch('http://localhost:3000/api/enum/enums', {
+                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('authToken')}` }
+            });
+            const enums = await response.json();
+
+            // Mise à jour des options du champ "niveau"
+            const niveauSelect = document.createElement('select'); // Crée un champ temporaire
+            enums.ENiveau.forEach(niveau => {
+                const option = document.createElement('option');
+                option.value = niveau;
+                option.textContent = niveau;
+                niveauSelect.appendChild(option);
+            });
+
+            // Stocke les options dans ClientManager pour une utilisation dynamique
+            clientManager.enumOptions = { niveau: niveauSelect.innerHTML };
+        } catch (error) {
+            console.log('Erreur lors du chargement des niveaux :', error);
+        }
+    }
+
+    // Initialisation de l'application
+    async function initializeApp() {
+        await checkTokenValidity();
+        await loadEnums();
+        await clientManager.loadAllClients();
+    }
+
+    // Charger les données de l'énumération dynamique dans les modals
+    ClientManager.prototype.insertModalIntoDOM = function (title) {
+        const existingModal = document.getElementById('dynamicClientModal');
+        if (existingModal) existingModal.remove();
+
+        // Clone le template du modal
+        const template = document.getElementById('clientModalTemplate').content.cloneNode(true);
+
+        // Met à jour le titre
+        const modalTitle = template.querySelector('.modal-title');
+        modalTitle.textContent = title;
+
+        // Ajoute les options dynamiques du champ "niveau"
+        const niveauSelect = template.querySelector('#niveau');
+        if (niveauSelect && this.enumOptions?.niveau) {
+            niveauSelect.innerHTML = this.enumOptions.niveau;
         }
 
-        // Initialiser l'application
-        async function initializeApp() {
-            loadEnums();
-            clientManager.loadAllClients();
-        }
+        // Insère le modal dans le DOM
+        document.body.appendChild(template);
 
-        window.addEventListener('load', initializeApp);
+        // Retourne l'instance Bootstrap du modal
+        return new bootstrap.Modal(document.getElementById('dynamicClientModal'));
+    };
+
+    window.addEventListener('load', initializeApp);
+
     </script>
 </body>
 </html>

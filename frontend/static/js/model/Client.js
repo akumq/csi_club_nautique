@@ -109,60 +109,85 @@ class ClientManager {
         this.#initEventListeners();
     }
 
-    showCreateForm() {
-        // Créer le formulaire HTML pour ajouter un nouveau client
-        const form = document.createElement("form");
-        form.setAttribute("id", "create-client-form");
-
-        // Créer les champs du formulaire
-        const nameField = document.createElement("input");
-        nameField.setAttribute("type", "text");
-        nameField.setAttribute("name", "name");
-        nameField.setAttribute("placeholder", "Nom du client");
-
-        const emailField = document.createElement("input");
-        emailField.setAttribute("type", "email");
-        emailField.setAttribute("name", "email");
-        emailField.setAttribute("placeholder", "Email du client");
-
-        const submitButton = document.createElement("button");
-        submitButton.setAttribute("type", "submit");
-        submitButton.textContent = "Créer";
-
-        // Créer un bouton d'annulation pour supprimer le formulaire
-        const cancelButton = document.createElement("button");
-        cancelButton.setAttribute("type", "button");
-        cancelButton.textContent = "Annuler";
-        cancelButton.addEventListener("click", () => {
-            form.remove(); // Supprimer le formulaire du DOM
-        });
-
-        // Ajouter les champs et le bouton au formulaire
-        form.appendChild(nameField);
-        form.appendChild(emailField);
-        form.appendChild(submitButton);
-        form.appendChild(cancelButton);
-
-        // Ajouter un gestionnaire d'événements pour envoyer le formulaire
-        form.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const name = nameField.value;
-            const email = emailField.value;
-
-            try {
-                // Appel de la méthode pour créer un client avec les valeurs du formulaire
-                await this.createClient(name, email);
-                form.reset(); // Réinitialiser le formulaire
-                form.remove(); // Supprimer le formulaire du DOM après soumission
-            } catch (error) {
-                alert("Erreur lors de la création du client: " + error.message);
-            }
-        });
-
-        // Ajouter le formulaire au DOM
-        document.body.appendChild(form);
+    // Méthode pour récupérer ou définir les champs du formulaire
+    setFormData(data = {}) {
+        document.getElementById('nom').value = data.nom || '';
+        document.getElementById('prenom').value = data.prenom || '';
+        document.getElementById('mail').value = data.mail || '';
+        document.getElementById('telephone').value = data.telephone || '';
+        document.getElementById('niveau').value = data.niveau || '';
+        document.getElementById('quantiteForfait').value = data.quantiteForfait || '';
     }
 
+    getFormData() {
+        return {
+            nom: document.getElementById('nom').value,
+            prenom: document.getElementById('prenom').value,
+            mail: document.getElementById('mail').value,
+            telephone: document.getElementById('telephone').value,
+            niveau: document.getElementById('niveau').value,
+            quantiteForfait: Number(document.getElementById('quantiteForfait').value),
+        };
+    }
+
+    insertModalIntoDOM(title) {
+        // Supprime un modal existant s'il est déjà présent
+        const existingModal = document.getElementById('dynamicClientModal');
+        if (existingModal) existingModal.remove();
+
+        // Clone le template
+        const template = document.getElementById('clientModalTemplate').content.cloneNode(true);
+
+        // Ajoute le titre au modal
+        const modalTitle = template.querySelector('.modal-title');
+        modalTitle.textContent = title;
+
+        // Ajoute le modal cloné dans le DOM
+        document.body.appendChild(template);
+
+        // Retourne l'instance Bootstrap du modal
+        return new bootstrap.Modal(document.getElementById('dynamicClientModal'));
+    }
+
+    async showCreateForm() {
+        const modal = this.insertModalIntoDOM('Nouveau Client');
+        this.setFormData(); // Réinitialise les champs du formulaire
+
+        const form = document.getElementById('dynamicClientForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const clientData = this.getFormData();
+                await this.createClient(clientData);
+                await this.loadAllClients();
+                modal.hide();
+            } catch (error) {
+                console.error('Erreur lors de la création du client :', error.message);
+            }
+        };
+
+        modal.show();
+    }
+
+    async showEditForm(client) {
+        const modal = this.insertModalIntoDOM('Modifier Client');
+        this.setFormData(client); // Pré-remplit les champs avec les données du client
+
+        const form = document.getElementById('dynamicClientForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const updatedClientData = this.getFormData();
+                await this.updateClient(client.id, updatedClientData);
+                await this.loadAllClients();
+                modal.hide();
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour du client :', error.message);
+            }
+        };
+
+        modal.show();
+    }
 
     // Initialisation des écouteurs d'événements
     #initEventListeners() {
@@ -180,49 +205,10 @@ class ClientManager {
             }
         });
     }
-
-    showEditForm(clientId) {
-        this.currentClientId = clientId; // Sauvegarde de l'ID du client à modifier
-        const client = this.clients.find(c => c.id === clientId);
-        if (client) {
-            document.getElementById('nom').value = client.nom;
-            document.getElementById('prenom').value = client.prenom;
-            document.getElementById('mail').value = client.mail;
-            document.getElementById('telephone').value = client.telephone;
-            document.getElementById('niveau').value = client.niveau;
-            document.getElementById('quantiteForfait').value = client.quantiteForfait;
-
-            // Modifier le titre du modal et le bouton
-            document.querySelector('.modal-title').textContent = 'Modifier Client';
-
-            // Changer le comportement du formulaire pour modifier un client
-            const form = document.getElementById('clientForm');
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-                const updatedClientData = {
-                    nom: document.getElementById('nom').value,
-                    prenom: document.getElementById('prenom').value,
-                    mail: document.getElementById('mail').value,
-                    telephone: document.getElementById('telephone').value,
-                    niveau: document.getElementById('niveau').value,
-                    quantiteForfait: Number(document.getElementById('quantiteForfait').value)
-                };
-                try {
-                    await this.updateClient(clientId, updatedClientData);
-                    this.loadAllClients(); // Recharger la liste après modification
-                    $('#createClientModal').modal('hide'); // Ferme le modal
-                } catch (error) {
-                    alert('Erreur lors de la modification du client.');
-                }
-            };
-
-            $('#createClientModal').modal('show'); // Afficher le modal
-        }
-    }
-
     // Méthode pour créer un client
     async createClient(clientData) {
         try {
+            console.log(clientData)
             const response = await this.#apiClient.request('/api/clients', {
                 method: 'POST',
                 headers: {
@@ -302,7 +288,7 @@ class ClientManager {
             }
     
             // Optionnellement, afficher un message de confirmation
-            alert("Client supprimé avec succès.");
+            console.log("Client supprimé avec succès.");
         } catch (error) {
             throw new Error(`Erreur lors de la suppression du client: ${error.message}`);
         }

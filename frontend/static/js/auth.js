@@ -21,11 +21,11 @@ class APIClient {
             const data = await response.json();
             this.token = data.token;
             sessionStorage.setItem('authToken', this.token);
-            alert('Login successful! Token stored in session storage.');
+            console.log('Login successful! Token stored in session storage.');
             window.location.href = '/dashboard.html'; // Redirection après connexion
         } catch (error) {
-            console.error(error);
-            alert('Error logging in.');
+            console.log(error);
+            console.log('Error logging in.');
         }
     }
 

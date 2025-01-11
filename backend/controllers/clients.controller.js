@@ -30,7 +30,10 @@ exports.getClientById = async (req, res) => {
 exports.createClient = async (req, res) => {
     console.log(req.body);
     const { nom, prenom, mail, telephone, niveau, quantiteForfait } = req.body;
-    quantiteForfait = parseInt(quantiteForfait, 10); 
+    if(!Number.isInteger(quantiteForfait)){
+        quantiteForfait = parseInt(quantiteForfait, 10); 
+    }
+
     // Vérification que tous les champs sont présents
     if (!nom || !prenom || !mail || !telephone || !niveau || quantiteForfait === undefined) {
         return res.status(400).json({ error: 'Tous les champs doivent être remplis' });
