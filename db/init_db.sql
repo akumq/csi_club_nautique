@@ -92,7 +92,7 @@ CREATE TABLE Facture (
 CREATE TABLE Reservation (
     id SERIAL PRIMARY KEY,
     date DATE NOT NULL,
-    duree INT NOT NULL CHECK (duree >= 0),
+    duree FLOAT NOT NULL CHECK (duree >= 0),
     typeRes EType_Res NOT NULL,
     tarif FLOAT NOT NULL,
     caution FLOAT NOT NULL,

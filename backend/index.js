@@ -9,6 +9,9 @@ const clientsRoutes = require('./routes/clients.routes');
 const authRoutes = require('./routes/auth.routes')
 const moniteurRoutes = require('./routes/moniteurs.routes')
 const proprietaireRoutes = require('./routes/proprietaire.routes')
+const coursRouter = require('./routes/cours.routes')
+const reservationsRouter = require('./routes/reservations.routes')
+const locationsRouter = require('./routes/locations.routes')
 
 // Auth
 const { authorizeRole } = require('./middleware/auth');
@@ -24,8 +27,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/clients', clientsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/moniteurs', moniteurRoutes);
-app.use('/api/proprietaire', proprietaireRoutes);
-
+app.use('/api/proprietaires', proprietaireRoutes);
+app.use('/api/cours', coursRouter);
+app.use('/api/reservations', reservationsRouter);
+app.use('/api/locations', locationsRouter);
 // server
 app.listen(process.env.PORT, () => {
     console.log(`Listening on port ${process.env.PORT}`);
