@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestion des Clients</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -43,23 +44,112 @@
                 margin-left: 0;
             }
         }
+        .calendar-container {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            background-color: white;
+        }
+
+        .calendar-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .weekdays-row {
+            background-color: #f8f9fa;
+            padding: 15px 0;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .calendar-day {
+            height: 150px;  /* Augmentation de la hauteur */
+            border: 1px solid #dee2e6;
+            background-color: white;
+            margin-bottom: 10px;  /* Espacement entre les rangées */
+        }
+
+        .calendar-day:hover {
+            background-color: #f8f9fa;
+        }
+
+        .day-content {
+            padding: 12px;  /* Plus de padding intérieur */
+            height: 100%;
+            position: relative;
+        }
+
+        .day-number {
+            font-size: 1.1rem;  /* Numéros plus grands */
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .today {
+            background-color: #e3f2fd;
+            border: 2px solid #0d6efd;
+        }
+
+        .other-month {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .event {
+            font-size: 0.9rem;  /* Police plus grande pour les événements */
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            color: white;
+            background-color: #007bff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);  /* Ombre légère */
+        }
+
+        /* Ajout d'espace entre les colonnes */
+        .calendar-row {
+            margin-left: -5px;
+            margin-right: -5px;
+        }
+
+        .calendar-row > div {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        /* Style amélioré pour les cartes d'aperçu */
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
-<body>
+<body class="bg-light">
+
     <!-- Sidebar -->
     <nav class="sidebar bg-light">
         <div class="sidebar-sticky">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="dashboard.html">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="clients.html">
                         Clients
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="reservations.html">
                         Réservations
                     </a>
                 </li>
+                
                 <li class="nav-item mt-3">
                     <button class="btn btn-outline-danger mx-3" id="logoutButton">
                         Déconnexion
@@ -69,188 +159,182 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Gestion des Clients</h1>
-                <button class="btn btn-primary" id="newClientButton">
-                    Nouveau Client
-                </button>
-            </div>
-
-            <!-- Table des clients -->
-            <div class="table-responsive">
-                <table class="table" id="clientsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nom</th>
-                            <th>Prénom</th>
-                            <th>Email</th>
-                            <th>Téléphone</th>
-                            <th>Niveau</th>
-                            <th>Quantité Forfait</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Contenu dynamique -->
-                    </tbody>
-                </table>
+    <div class="container py-4">
+        <!-- En-tête du Dashboard -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="h3">Dashboard Calendrier</h1>
             </div>
         </div>
-    </main>
 
-    <template id="clientModalTemplate">
-        <div class="modal fade" id="dynamicClientModal" tabindex="-1" aria-labelledby="dynamicClientModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Titre du Modal</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Cartes d'aperçu -->
+        <div class="row mb-4 g-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Événements du jour</h5>
+                        <h2 class="mb-0">3</h2>
                     </div>
-                    <div class="modal-body">
-                        <form id="dynamicClientForm">
-                            <div class="mb-3">
-                                <label for="nom" class="form-label">Nom</label>
-                                <input type="text" class="form-control" id="nom" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="prenom" class="form-label">Prénom</label>
-                                <input type="text" class="form-control" id="prenom" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="mail" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="mail" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="telephone" class="form-label">Téléphone</label>
-                                <input type="tel" class="form-control" id="telephone" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="niveau" class="form-label">Niveau</label>
-                                <select class="form-control" id="niveau"></select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="quantiteForfait" class="form-label">Quantité Forfait</label>
-                                <input type="number" class="form-control" id="quantiteForfait" required>
-                            </div>
-                        </form>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">À venir cette semaine</h5>
+                        <h2 class="mb-0">8</h2>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" form="dynamicClientForm" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Total du mois</h5>
+                        <h2 class="mb-0">24</h2>
                     </div>
                 </div>
             </div>
         </div>
-    </template>
 
-    <!-- Scripts -->
+        <!-- Calendrier -->
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Janvier 2024</h4>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/model/client.js"></script>
+                <!-- Jours de la semaine -->
+                <div class="row weekdays-row text-center">
+                    <div class="col">Lun</div>
+                    <div class="col">Mar</div>
+                    <div class="col">Mer</div>
+                    <div class="col">Jeu</div>
+                    <div class="col">Ven</div>
+                    <div class="col">Sam</div>
+                    <div class="col">Dim</div>
+                </div>
 
-    <script>
-        const clientManager = new ClientManager('http://localhost:3000', 'clientsTable');
+                <!-- Première semaine -->
+                <div class="row calendar-row">
+                    <div class="col">
+                        <div class="calendar-day other-month">
+                            <div class="day-content">
+                                <div class="day-number">31</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">1</div>
+                                <div class="event">Réunion équipe</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">2</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">3</div>
+                                <div class="event">Présentation</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">4</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">5</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">6</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-// Vérification de la validité du token
-async function checkTokenValidity() {
-        const token = sessionStorage.getItem('authToken');
-        if (!token) {
-            window.location.href = '/login.html';
-            return;
-        }
+                <!-- Deuxième semaine -->
+                <div class="row calendar-row">
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">7</div>
+                                <div class="event">Formation</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">8</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">9</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day today">
+                            <div class="day-content">
+                                <div class="day-number">10</div>
+                                <div class="event">Point client</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">11</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">12</div>
+                                <div class="event">Déjeuner équipe</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="calendar-day">
+                            <div class="day-content">
+                                <div class="day-number">13</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        try {
-            const response = await fetch('http://localhost:3000/api/auth/verifyToken', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                window.location.href = '/login.html';
-            }
-        } catch (error) {
-            console.log('Erreur lors de la vérification du token:', error);
-            window.location.href = '/login.html';
-        }
-    }
-
-    // Gestion de l'événement pour afficher le formulaire de création
-    document.getElementById('newClientButton').addEventListener('click', () => {
-        clientManager.showCreateForm();
-    });
-
-    // Gestion de la déconnexion
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        sessionStorage.removeItem('authToken');
-        window.location.href = '/login.html';
-    });
-
-    // Chargement des énumérations (niveaux)
-    async function loadEnums() {
-        try {
-            const response = await fetch('http://localhost:3000/api/enum/enums', {
-                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('authToken')}` }
-            });
-            const enums = await response.json();
-
-            // Mise à jour des options du champ "niveau"
-            const niveauSelect = document.createElement('select'); // Crée un champ temporaire
-            enums.ENiveau.forEach(niveau => {
-                const option = document.createElement('option');
-                option.value = niveau;
-                option.textContent = niveau;
-                niveauSelect.appendChild(option);
-            });
-
-            // Stocke les options dans ClientManager pour une utilisation dynamique
-            clientManager.enumOptions = { niveau: niveauSelect.innerHTML };
-        } catch (error) {
-            console.log('Erreur lors du chargement des niveaux :', error);
-        }
-    }
-
-    // Initialisation de l'application
-    async function initializeApp() {
-        await checkTokenValidity();
-        await loadEnums();
-        await clientManager.loadAllClients();
-    }
-
-    // Charger les données de l'énumération dynamique dans les modals
-    ClientManager.prototype.insertModalIntoDOM = function (title) {
-        const existingModal = document.getElementById('dynamicClientModal');
-        if (existingModal) existingModal.remove();
-
-        // Clone le template du modal
-        const template = document.getElementById('clientModalTemplate').content.cloneNode(true);
-
-        // Met à jour le titre
-        const modalTitle = template.querySelector('.modal-title');
-        modalTitle.textContent = title;
-
-        // Ajoute les options dynamiques du champ "niveau"
-        const niveauSelect = template.querySelector('#niveau');
-        if (niveauSelect && this.enumOptions?.niveau) {
-            niveauSelect.innerHTML = this.enumOptions.niveau;
-        }
-
-        // Insère le modal dans le DOM
-        document.body.appendChild(template);
-
-        // Retourne l'instance Bootstrap du modal
-        return new bootstrap.Modal(document.getElementById('dynamicClientModal'));
-    };
-
-    window.addEventListener('load', initializeApp);
-
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
