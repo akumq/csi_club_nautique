@@ -14,6 +14,7 @@ const coursRouter = require('./routes/cours.routes')
 const reservationsRouter = require('./routes/reservations.routes')
 const locationsRouter = require('./routes/locations.routes')
 const enumRoutes = require('./routes/enum.routes');
+const materielRoutes = require('./routes/materiels.routes');
 
 // Auth
 const { authorizeRole } = require('./middleware/auth');
@@ -35,6 +36,7 @@ app.use('/api/cours', coursRouter);
 app.use('/api/reservations', reservationsRouter);
 app.use('/api/locations', locationsRouter);
 app.use('/api/enum', enumRoutes);
+app.use('/api/materiels', materielRoutes);
 
 // server
 app.listen(process.env.PORT, () => {
