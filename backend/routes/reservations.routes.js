@@ -18,4 +18,7 @@ router.put('/:id',authenticateToken, authorizeRole(['administrateur', 'proprieta
 // Route pour supprimer un client
 router.delete('/:id',authenticateToken, authorizeRole(['administrateur', 'proprietaire']), reservationsController.deleteReservation);
 
+// Ajouter ces nouvelles routes
+router.post('/:id/materiels', authenticateToken, authorizeRole(['administrateur', 'proprietaire']), reservationsController.addMaterielToReservation);
+
 module.exports = router;

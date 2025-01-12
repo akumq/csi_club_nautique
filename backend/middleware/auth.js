@@ -1,6 +1,5 @@
-
 const jwt = require('jsonwebtoken');
-const pool = require('../database'); 
+const pool = require('../database');
 
 exports.authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -14,31 +13,36 @@ exports.authenticateToken = (req, res, next) => {
         if (err) {
             return res.status(403).json({ message: 'Token invalide' });
         }
-
-        req.user = user; // Assurez-vous que `user` contient bien les informations nécessaires
-        console.log('Authenticated user:', req.user); // Log pour vérifier
+        req.user = user;
         next();
     });
 };
 
-// Middleware pour vérifier le rôle
-exports.authorizeRole = (roles) => async (req, res, next) => {
-    const { username } = req.user;
+exports.authorizeRole = (roles) => {
+    return async (req, res, next) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({ message: 'Utilisateur non authentifié' });
+            }
 
-    try {
-        const userResult = await pool.query('SELECT * FROM pg_roles WHERE rolname = $1', [username]);
+            const username = req.user.username;
+            const userResult = await pool.query(
+                'SELECT rolname FROM pg_roles WHERE rolname = $1',
+                [username]
+            );
 
-        if (!userResult.rows.length) {
-            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+            if (!userResult.rows.length) {
+                return res.status(404).json({ message: 'Utilisateur non trouvé' });
+            }
+
+            if (!roles.includes(username)) {
+                return res.status(403).json({ message: 'Accès refusé: Rôle non autorisé' });
+            }
+
+            next();
+        } catch (error) {
+            console.error('Erreur d\'autorisation:', error);
+            res.status(500).json({ message: 'Erreur lors de la vérification des autorisations' });
         }
-
-        if (!roles.includes(username)) {
-            return res.status(403).json({ message: 'Accès refusé: Rôle non autorisé' });
-        }
-
-        next();
-    } catch (error) {
-        console.error('Erreur lors de la vérification de l\'utilisateur:', error);
-        res.status(500).json({ message: 'Erreur lors de la vérification de l\'utilisateur' });
-    }
+    };
 };

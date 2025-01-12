@@ -5,14 +5,12 @@ const bodyParser = require('body-parser');
 
 require('dotenv').config();
 
-// Routes 
+// Routes
 const clientsRoutes = require('./routes/clients.routes');
-const authRoutes = require('./routes/auth.routes')
-const moniteurRoutes = require('./routes/moniteurs.routes')
-const proprietaireRoutes = require('./routes/proprietaire.routes')
-const coursRouter = require('./routes/cours.routes')
-const reservationsRouter = require('./routes/reservations.routes')
-const locationsRouter = require('./routes/locations.routes')
+const authRoutes = require('./routes/auth.routes');
+const personnelsRoutes = require('./routes/personnels.routes');
+const activitesRoutes = require('./routes/activites.routes');
+const locationsRouter = require('./routes/locations.routes');
 const enumRoutes = require('./routes/enum.routes');
 const materielRoutes = require('./routes/materiels.routes');
 
@@ -30,10 +28,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // routes
 app.use('/api/clients', clientsRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/moniteurs', moniteurRoutes);
-app.use('/api/proprietaires', proprietaireRoutes);
-app.use('/api/cours', coursRouter);
-app.use('/api/reservations', reservationsRouter);
+app.use('/api/personnels', personnelsRoutes);
+app.use('/api/activites', activitesRoutes);
 app.use('/api/locations', locationsRouter);
 app.use('/api/enum', enumRoutes);
 app.use('/api/materiels', materielRoutes);

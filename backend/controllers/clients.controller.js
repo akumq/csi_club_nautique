@@ -1,88 +1,84 @@
-const pool = require('../database'); 
+const pool = require('../database');
+
 // Récupérer tous les client
-exports.getClients = async (req, res) => {
+exports.getAllClients = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM client');
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Erreur lors de la récupération des client', err);
-        res.status(500).json({ error: 'Une erreur est survenue' });
+        const result = await pool.query('SELECT id, nom, prenom, mail, telephone, niveau, quantiteforfait FROM client ORDER BY id');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des clients:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };
 
 // Récupérer un client par ID
 exports.getClientById = async (req, res) => {
-    const { id } = req.params;
     try {
+        const { id } = req.params;
         const result = await pool.query('SELECT * FROM client WHERE id = $1', [id]);
-        if (result.rows.length > 0) {
-            res.status(200).json(result.rows[0]);
-        } else {
-            res.status(404).json({ message: 'Client non trouvé' });
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Client non trouvé' });
         }
-    } catch (err) {
-        console.error('Erreur lors de la récupération du client', err);
-        res.status(500).json({ error: 'Une erreur est survenue' });
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Erreur lors de la récupération du client:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };
 
 // Créer un nouveau client
 exports.createClient = async (req, res) => {
-    console.log(req.body);
-    const { nom, prenom, mail, telephone, niveau, quantiteForfait } = req.body;
-    if(!Number.isInteger(quantiteForfait)){
-        quantiteForfait = parseInt(quantiteForfait, 10); 
-    }
-
-    // Vérification que tous les champs sont présents
-    if (!nom || !prenom || !mail || !telephone || !niveau || quantiteForfait === undefined) {
-        return res.status(400).json({ error: 'Tous les champs doivent être remplis' });
-    }
     try {
+        const { nom, prenom, mail, telephone, niveau, quantiteforfait } = req.body;
         const result = await pool.query(
-            'INSERT INTO client (nom, prenom, mail, telephone, niveau, quantiteForfait) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [nom, prenom, mail, telephone, niveau, quantiteForfait]
+            'INSERT INTO client (nom, prenom, mail, telephone, niveau, quantiteforfait) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [nom, prenom, mail, telephone, niveau, quantiteforfait]
         );
+        
         res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('Erreur lors de la création du client', err);
-        res.status(500).json({ error: 'Une erreur est survenue' });
+    } catch (error) {
+        console.error('Erreur lors de la création du client:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };
 
-
 // Mettre à jour un client
 exports.updateClient = async (req, res) => {
-    const { id } = req.params;
-    const { nom, prenom, mail, telephone, niveau, quantiteForfait } = req.body;
     try {
+        const { id } = req.params;
+        const { nom, prenom, mail, telephone, niveau, quantiteforfait } = req.body;
+        
         const result = await pool.query(
-            'UPDATE client SET nom = $1, prenom = $2, mail = $3, telephone = $4, niveau = $5, quantiteForfait = $6 WHERE id = $7 RETURNING *',
-            [nom, prenom, mail, telephone, niveau, quantiteForfait, id]
+            'UPDATE client SET nom = $1, prenom = $2, mail = $3, telephone = $4, niveau = $5, quantiteforfait = $6 WHERE id = $7 RETURNING *',
+            [nom, prenom, mail, telephone, niveau, quantiteforfait, id]
         );
-        if (result.rows.length > 0) {
-            res.status(200).json(result.rows[0]);
-        } else {
-            res.status(404).json({ message: 'Client non trouvé' });
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Client non trouvé' });
         }
-    } catch (err) {
-        console.error('Erreur lors de la mise à jour du client', err);
-        res.status(500).json({ error: 'Une erreur est survenue' });
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du client:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };
 
 // Supprimer un client
 exports.deleteClient = async (req, res) => {
-    const { id } = req.params;
     try {
+        const { id } = req.params;
         const result = await pool.query('DELETE FROM client WHERE id = $1 RETURNING *', [id]);
-        if (result.rows.length > 0) {
-            res.status(200).json({ message: 'Client supprimé avec succès' });
-        } else {
-            res.status(404).json({ message: 'Client non trouvé' });
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Client non trouvé' });
         }
-    } catch (err) {
-        console.error('Erreur lors de la suppression du client', err);
-        res.status(500).json({ error: 'Une erreur est survenue' });
+        
+        res.json({ message: 'Client supprimé avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression du client:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };

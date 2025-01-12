@@ -3,101 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestion des Clients</title>
+    <title>Gestion des Clients - Club Nautique</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <style>
-        .sidebar {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 100;
-            padding: 48px 0 0;
-            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-            width: 250px;
-        }
-
-        .sidebar-sticky {
-            position: relative;
-            top: 0;
-            height: calc(100vh - 48px);
-            padding-top: .5rem;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                padding: 0;
-            }
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Sidebar -->
-    <nav class="sidebar bg-light">
-        <div class="sidebar-sticky">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="dashboard.html">
-                        Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="clients.html">
-                        Clients
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="reservations.html">
-                        Réservations
-                    </a>
-                </li>
-                
-                <li class="nav-item mt-3">
-                    <button class="btn btn-outline-danger mx-3" id="logoutButton">
-                        Déconnexion
-                    </button>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container-fluid">
+    <div id="navigation" class="sidebar"></div>
+    <div class="container-fluid">
+        <div class="main-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Gestion des Clients</h1>
+                <h1><i class="fas fa-users"></i> Gestion des Clients</h1>
                 <button class="btn btn-primary" id="newClientButton">
+                    <i class="fas fa-plus"></i>
                     Nouveau Client
                 </button>
             </div>
 
-            <!-- Table des clients -->
+            <!-- Table des Clients -->
             <div class="table-responsive">
                 <table class="table" id="clientsTable">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nom</th>
-                            <th>Prénom</th>
-                            <th>Email</th>
-                            <th>Téléphone</th>
-                            <th>Niveau</th>
-                            <th>Quantité Forfait</th>
-                            <th>Actions</th>
+                            <th><i class="fas fa-hashtag"></i> ID</th>
+                            <th><i class="fas fa-user"></i> Nom</th>
+                            <th><i class="fas fa-user"></i> Prénom</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-phone"></i> Téléphone</th>
+                            <th><i class="fas fa-star"></i> Niveau</th>
+                            <th><i class="fas fa-check-circle"></i> Quantité Forfait</th>
+                            <th><i class="fas fa-cogs"></i> Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,47 +40,57 @@
                 </table>
             </div>
         </div>
-    </main>
+    </div>
 
+    <!-- Template pour le Modal -->
     <template id="clientModalTemplate">
         <div class="modal fade" id="dynamicClientModal" tabindex="-1" aria-labelledby="dynamicClientModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Titre du Modal</h5>
+                        <h5 class="modal-title">Créer un Client</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form id="dynamicClientForm">
                             <div class="mb-3">
-                                <label for="nom" class="form-label">Nom</label>
+                                <label for="nom" class="form-label"><i class="fas fa-user"></i> Nom</label>
                                 <input type="text" class="form-control" id="nom" required>
                             </div>
                             <div class="mb-3">
-                                <label for="prenom" class="form-label">Prénom</label>
+                                <label for="prenom" class="form-label"><i class="fas fa-user"></i> Prénom</label>
                                 <input type="text" class="form-control" id="prenom" required>
                             </div>
                             <div class="mb-3">
-                                <label for="mail" class="form-label">Email</label>
+                                <label for="mail" class="form-label"><i class="fas fa-envelope"></i> Email</label>
                                 <input type="email" class="form-control" id="mail" required>
                             </div>
                             <div class="mb-3">
-                                <label for="telephone" class="form-label">Téléphone</label>
+                                <label for="telephone" class="form-label"><i class="fas fa-phone"></i> Téléphone</label>
                                 <input type="tel" class="form-control" id="telephone" required>
                             </div>
                             <div class="mb-3">
-                                <label for="niveau" class="form-label">Niveau</label>
-                                <select class="form-control" id="niveau"></select>
+                                <label for="niveau" class="form-label"><i class="fas fa-star"></i> Niveau</label>
+                                <select class="form-control" id="niveau" required>
+                                    <option value="Débutant">Débutant</option>
+                                    <option value="Intermédiaire">Intermédiaire</option>
+                                    <option value="Avancé">Avancé</option>
+                                    <option value="Expert">Expert</option>
+                                </select>
                             </div>
                             <div class="mb-3">
-                                <label for="quantiteForfait" class="form-label">Quantité Forfait</label>
+                                <label for="quantiteForfait" class="form-label"><i class="fas fa-check-circle"></i> Quantité Forfait</label>
                                 <input type="number" class="form-control" id="quantiteForfait" required>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" form="dynamicClientForm" class="btn btn-primary">Enregistrer</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                        <button type="submit" form="dynamicClientForm" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
                     </div>
                 </div>
             </div>
@@ -154,109 +98,27 @@
     </template>
 
     <!-- Scripts -->
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navigation.js"></script>
     <script src="/static/js/model/client.js"></script>
-
     <script>
         const clientManager = new ClientManager('http://localhost:3000', 'clientsTable');
 
-// Vérification de la validité du token
-async function checkTokenValidity() {
-        const token = sessionStorage.getItem('authToken');
-        if (!token) {
-            window.location.href = '/login.html';
-            return;
-        }
+        document.getElementById('newClientButton').addEventListener('click', () => {
+            clientManager.showCreateForm();
+        });
 
-        try {
-            const response = await fetch('http://localhost:3000/api/auth/verifyToken', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                window.location.href = '/login.html';
+        async function initializeApp() {
+            try {
+                await Navigation.loadNavigation();
+                await clientManager.loadAllClients();
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation:', error);
             }
-        } catch (error) {
-            console.log('Erreur lors de la vérification du token:', error);
-            window.location.href = '/login.html';
-        }
-    }
-
-    // Gestion de l'événement pour afficher le formulaire de création
-    document.getElementById('newClientButton').addEventListener('click', () => {
-        clientManager.showCreateForm();
-    });
-
-    // Gestion de la déconnexion
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        sessionStorage.removeItem('authToken');
-        window.location.href = '/login.html';
-    });
-
-    // Chargement des énumérations (niveaux)
-    async function loadEnums() {
-        try {
-            const response = await fetch('http://localhost:3000/api/enum/enums', {
-                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('authToken')}` }
-            });
-            const enums = await response.json();
-
-            // Mise à jour des options du champ "niveau"
-            const niveauSelect = document.createElement('select'); // Crée un champ temporaire
-            enums.ENiveau.forEach(niveau => {
-                const option = document.createElement('option');
-                option.value = niveau;
-                option.textContent = niveau;
-                niveauSelect.appendChild(option);
-            });
-
-            // Stocke les options dans ClientManager pour une utilisation dynamique
-            clientManager.enumOptions = { niveau: niveauSelect.innerHTML };
-        } catch (error) {
-            console.log('Erreur lors du chargement des niveaux :', error);
-        }
-    }
-
-    // Initialisation de l'application
-    async function initializeApp() {
-        await checkTokenValidity();
-        await loadEnums();
-        await clientManager.loadAllClients();
-    }
-
-    // Charger les données de l'énumération dynamique dans les modals
-    ClientManager.prototype.insertModalIntoDOM = function (title) {
-        const existingModal = document.getElementById('dynamicClientModal');
-        if (existingModal) existingModal.remove();
-
-        // Clone le template du modal
-        const template = document.getElementById('clientModalTemplate').content.cloneNode(true);
-
-        // Met à jour le titre
-        const modalTitle = template.querySelector('.modal-title');
-        modalTitle.textContent = title;
-
-        // Ajoute les options dynamiques du champ "niveau"
-        const niveauSelect = template.querySelector('#niveau');
-        if (niveauSelect && this.enumOptions?.niveau) {
-            niveauSelect.innerHTML = this.enumOptions.niveau;
         }
 
-        // Insère le modal dans le DOM
-        document.body.appendChild(template);
-
-        // Retourne l'instance Bootstrap du modal
-        return new bootstrap.Modal(document.getElementById('dynamicClientModal'));
-    };
-
-    window.addEventListener('load', initializeApp);
-
+        window.addEventListener('load', initializeApp);
     </script>
 </body>
 </html>

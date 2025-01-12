@@ -7,8 +7,9 @@ class Client {
     #niveau;
     #quantiteforfait;
     #apiClient;
+    #clientManager;
 
-    constructor(data, apiClient) {
+    constructor(data, apiClient, clientManager) {
         const { id, nom, prenom, mail, telephone, niveau, quantiteforfait } = data;
         
         this.#id = id;
@@ -19,6 +20,7 @@ class Client {
         this.#niveau = niveau;
         this.#quantiteforfait = quantiteforfait;
         this.#apiClient = apiClient;
+        this.#clientManager = clientManager;
     }
 
     // Getters
@@ -46,7 +48,8 @@ class Client {
     // Méthode pour créer un élément TR pour l'affichage
     toTableRow() {
         const row = document.createElement('tr');
-        console.log(this.#quantiteforfait)
+        row.id = `client-${this.#id}`;
+        
         row.innerHTML = `
             <td>${this.#id}</td>
             <td>${this.#nom}</td>
@@ -55,10 +58,7 @@ class Client {
             <td>${this.#telephone}</td>
             <td>${this.#niveau}</td>
             <td>${this.#quantiteforfait !== undefined ? this.#quantiteforfait : 'N/A'}</td>
-            <td>
-                <button class="btn btn-warning" data-client-id="${this.#id}">Edit</button>
-                <button class="btn btn-danger" data-client-id="${this.#id}">Delete</button>
-            </td>
+            <td>${this.#clientManager.createActionButtons(this.#id)}</td>
         `;
         return row;
     }
@@ -74,7 +74,7 @@ class Client {
                 body: JSON.stringify(updatedData)
             });
             
-            Object.assign(this, new Client(response, this.#apiClient));
+            Object.assign(this, new Client(response, this.#apiClient, this.#clientManager));
             return this;
         } catch (error) {
             throw new Error(`Erreur lors de la mise à jour du client: ${error.message}`);
@@ -111,12 +111,24 @@ class ClientManager {
 
     // Méthode pour récupérer ou définir les champs du formulaire
     setFormData(data = {}) {
-        document.getElementById('nom').value = data.nom || '';
-        document.getElementById('prenom').value = data.prenom || '';
-        document.getElementById('mail').value = data.mail || '';
-        document.getElementById('telephone').value = data.telephone || '';
-        document.getElementById('niveau').value = data.niveau || '';
-        document.getElementById('quantiteForfait').value = data.quantiteForfait || '';
+        const nomInput = document.getElementById('nom');
+        const prenomInput = document.getElementById('prenom');
+        const mailInput = document.getElementById('mail');
+        const telephoneInput = document.getElementById('telephone');
+        const niveauInput = document.getElementById('niveau');
+        const quantiteForfaitInput = document.getElementById('quantiteForfait');
+
+        // Vérifiez que les éléments ne sont pas null
+        if (nomInput && prenomInput && mailInput && telephoneInput && niveauInput && quantiteForfaitInput) {
+            nomInput.value = data.nom || '';
+            prenomInput.value = data.prenom || '';
+            mailInput.value = data.mail || '';
+            telephoneInput.value = data.telephone || '';
+            niveauInput.value = data.niveau || '';
+            quantiteForfaitInput.value = data.quantiteForfait || '';
+        } else {
+            console.error('Un ou plusieurs éléments du formulaire sont manquants.');
+        }
     }
 
     getFormData() {
@@ -149,23 +161,15 @@ class ClientManager {
         return new bootstrap.Modal(document.getElementById('dynamicClientModal'));
     }
 
-    async showCreateForm() {
-        const modal = this.insertModalIntoDOM('Nouveau Client');
+    showCreateForm() {
+        const modalTemplate = document.getElementById('clientModalTemplate');
+        const modalClone = modalTemplate.content.cloneNode(true);
+        const modal = new bootstrap.Modal(modalClone.querySelector('#dynamicClientModal'));
+
+        // Réinitialiser les valeurs des champs
         this.setFormData(); // Réinitialise les champs du formulaire
 
-        const form = document.getElementById('dynamicClientForm');
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const clientData = this.getFormData();
-                await this.createClient(clientData);
-                await this.loadAllClients();
-                modal.hide();
-            } catch (error) {
-                console.error('Erreur lors de la création du client :', error.message);
-            }
-        };
-
+        document.body.appendChild(modalClone);
         modal.show();
     }
 
@@ -199,7 +203,7 @@ class ClientManager {
             if (!clientId) return;
 
             if (button.classList.contains('btn-warning')) {
-                this.showEditForm(clientId);
+                this.editClient(clientId);
             } else if (button.classList.contains('btn-danger')) {
                 this.deleteClient(clientId);
             }
@@ -220,7 +224,7 @@ class ClientManager {
             // Vérification des données reçues
             console.log("Client créé :", response);
             
-            const newClient = new Client(response, this.#apiClient);
+            const newClient = new Client(response, this.#apiClient, this);
             this.#clients.set(newClient.id, newClient);
             this.#refreshDisplay();
             return newClient;
@@ -237,7 +241,7 @@ class ClientManager {
             this.#clients.clear();
             
             clientsData.forEach(data => {
-                const client = new Client(data, this.#apiClient);
+                const client = new Client(data, this.#apiClient, this);
                 this.#clients.set(client.id, client);
             });
 
@@ -300,5 +304,27 @@ class ClientManager {
         this.#clients.forEach(client => {
             this.#tableBody.appendChild(client.toTableRow());
         });
+    }
+
+    createActionButtons(id) {
+        return `
+            <div class="table-actions">
+                <button class="btn btn-warning btn-sm btn-action" onclick="clientManager.editClient(${id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm btn-action" onclick="clientManager.deleteClient(${id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    async editClient(clientId) {
+        try {
+            const client = await this.#apiClient.request(`/api/clients/${clientId}`);
+            this.showEditForm(client);
+        } catch (error) {
+            console.error('Erreur lors de la récupération du client :', error);
+        }
     }
 }

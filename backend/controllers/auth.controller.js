@@ -15,25 +15,27 @@ exports.loginUser = async (req, res) => {
         });
 
         // Vérifie si la connexion fonctionne
-        const roleResult = await pool.query('SELECT CURRENT_USER');
-        const currentUser = roleResult.rows[0].current_user;
+        await pool.connect();
 
         // Génère un token JWT
-        const token = jwt.sign({ username: currentUser }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(
+            { username: username, role: userRole }, // Stocke le rôle dans le token
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRATION }
+        );
 
-        res.json({ 
-            message: 'Connexion réussie', 
-            token, 
-            currentUser 
+        res.status(200).json({
+            message: 'Connexion réussie',
+            token: token,
+            role: userRole
         });
 
     } catch (error) {
-        console.error('Erreur de connexion :', error.message);
-        res.status(401).json({ message: 'Identifiants incorrects ou permission refusée' });
+        console.error('Erreur de connexion:', error);
+        res.status(401).json({ message: 'Identifiants invalides' });
     }
 };
 
-// Fonction de vérification du token
 exports.verifyToken = (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -42,11 +44,14 @@ exports.verifyToken = (req, res) => {
         return res.status(401).json({ message: 'Token manquant' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(403).json({ message: 'Token invalide' });
+            return res.status(401).json({ message: 'Token invalide' });
         }
 
-        res.status(200).json({ message: 'Token valide' });
+        res.status(200).json({ 
+            message: 'Token valide',
+            user: decoded
+        });
     });
 };

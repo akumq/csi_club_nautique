@@ -108,7 +108,8 @@ CREATE TABLE Cours (
     niveau ENiveau NOT NULL,
     etat EEtat NOT NULL,
     nbParticipants INT NOT NULL CHECK (nbParticipants <= 10),
-    moniteur_id INT
+    moniteur_id INT,
+    reservation_id INT REFERENCES Reservation(id) ON DELETE CASCADE
 );
 
 -- Table Location
@@ -119,7 +120,8 @@ CREATE TABLE Location (
     materiel_id INT,
     etat EEtat NOT NULL,
     nbParticipants INT NOT NULL CHECK (nbParticipants > 0),
-    client_id INT
+    client_id INT,
+    reservation_id INT REFERENCES Reservation(id) ON DELETE CASCADE
 );
 
 -- Table Reparation
@@ -160,6 +162,13 @@ CREATE TABLE Proprietaire (
     personnel_id INT
 );
 
+-- Table reservation_materiel
+CREATE TABLE reservation_materiel (
+    reservation_id INT REFERENCES Reservation(id) ON DELETE CASCADE,
+    materiel_id INT REFERENCES Materiel(id) ON DELETE CASCADE,
+    PRIMARY KEY (reservation_id, materiel_id)
+);
+
 -- Ajout des contraintes de clés étrangères
 ALTER TABLE Flotteur ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
 ALTER TABLE Voile ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
@@ -175,6 +184,20 @@ ALTER TABLE Reparation ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFE
 ALTER TABLE Moniteur ADD CONSTRAINT fk_personnel FOREIGN KEY (personnel_id) REFERENCES Personnel(id);
 ALTER TABLE Proprietaire ADD CONSTRAINT fk_personnel FOREIGN KEY (personnel_id) REFERENCES Personnel(id);
 
+-- Supprimer la table reservation_participants qui n'est plus nécessaire
+DROP TABLE IF EXISTS reservation_participants;
+
+-- Modifier la contrainte sur nbParticipants dans Reservation
+ALTER TABLE Reservation DROP CONSTRAINT IF EXISTS reservation_nbparticipants_check;
+ALTER TABLE Reservation ADD CONSTRAINT reservation_nbparticipants_check CHECK (nbParticipants = 1);
+
+-- Modifier la contrainte sur nbParticipants dans Cours
+ALTER TABLE Cours DROP CONSTRAINT IF EXISTS cours_nbparticipants_check;
+ALTER TABLE Cours ADD CONSTRAINT cours_nbparticipants_check CHECK (nbParticipants = 1);
+
+-- Modifier la contrainte sur nbParticipants dans Location
+ALTER TABLE Location DROP CONSTRAINT IF EXISTS location_nbparticipants_check;
+ALTER TABLE Location ADD CONSTRAINT location_nbparticipants_check CHECK (nbParticipants = 1);
 
 -- Création des rôles
 -- CREATE ROLE administrateur WITH LOGIN PASSWORD 'admin_password';
@@ -182,9 +205,10 @@ CREATE ROLE proprietaire WITH LOGIN PASSWORD 'proprietaire_password';
 CREATE ROLE moniteur WITH LOGIN PASSWORD 'moniteur_password';
 
 -- Droits pour l'administrateur
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO administrateur;
-GRANT CREATE, DROP ON SCHEMA public TO administrateur;  -- Grant CREATE and DROP on schema, not tables
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO administrateur;
+GRANT ALL PRIVILEGES ON SCHEMA public TO administrateur;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO administrateur;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO administrateur;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO administrateur;
 
 -- Droits pour le propriétaire
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO proprietaire;
@@ -194,3 +218,6 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO proprietaire;
 GRANT SELECT ON Cours, Materiel, Clients, AchatForfait TO moniteur;
 GRANT INSERT ON Reservation, Cours, Location, Clients, Facture TO moniteur;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO moniteur;
+
+-- Ajouter cette ligne pour permettre à l'administrateur de créer des objets
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO administrateur;
