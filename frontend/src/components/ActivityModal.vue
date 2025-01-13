@@ -230,7 +230,7 @@ export default {
 
   emits: ['save', 'close'],
 
-  setup(props, { emit }) {
+  setup(props) {
     const store = useStore()
     const loading = ref(false)
     const moniteurs = ref([])
@@ -324,7 +324,7 @@ export default {
           materiels: form.value.materiels
         };
 
-        await addActivity(activityData); // Ajoutez l'activité
+        await store.dispatch('activities/createActivity', activityData); // Appel à l'action Vuex
 
         // Mettre à jour le statut des matériels
         for (const materielId of form.value.materiels) {

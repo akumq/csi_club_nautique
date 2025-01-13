@@ -50,6 +50,18 @@
                   >
                     <i class="fas fa-trash"></i>
                   </button>
+                  <button 
+                    class="btn btn-sm btn-outline-info"
+                    @click="showFacturesModal(client)"
+                  >
+                    <i class="fas fa-file-invoice"></i> Factures
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-outline-success"
+                    @click="showAchatForfaitModal(client)"
+                  >
+                    <i class="fas fa-shopping-cart"></i> Acheter Forfait
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -174,9 +186,10 @@ export default {
       }
     }
 
-    const showFacturesModal = (client) => {
+    const showFacturesModal = async (client) => {
       selectedClient.value = client
       showFactures.value = true
+      await store.dispatch('clients/fetchClientFactures', client.id)
     }
 
     const closeFacturesModal = () => {

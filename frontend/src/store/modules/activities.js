@@ -95,6 +95,17 @@ export default {
         console.error('Erreur lors de la suppression de l\'activité:', error);
         throw error;
       }
+    },
+
+    async addActivity({ commit }, activityData) {
+      try {
+        const activity = await ApiService.post('/activities', activityData)
+        commit('ADD_ACTIVITY', activity)
+        return activity
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        throw error
+      }
     }
   }
 } 
