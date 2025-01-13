@@ -7,6 +7,7 @@
       </button>
     </div>
 
+    <!-- Liste du personnel -->
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
@@ -19,27 +20,31 @@
                 <th>Type</th>
                 <th>Email</th>
                 <th>Téléphone</th>
+                <th>Diplôme</th>
+                <th>Permis</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="person in personnel" :key="person.id">
-                <td>{{ person.id }}</td>
-                <td>{{ person.nom }}</td>
-                <td>{{ person.prenom }}</td>
-                <td>{{ person.type }}</td>
-                <td>{{ person.email }}</td>
-                <td>{{ person.telephone }}</td>
+              <tr v-for="personnel in personnels" :key="personnel.id">
+                <td>{{ personnel.id }}</td>
+                <td>{{ personnel.nom }}</td>
+                <td>{{ personnel.prenom }}</td>
+                <td>{{ personnel.type }}</td>
+                <td>{{ personnel.mail }}</td>
+                <td>{{ personnel.telephone }}</td>
+                <td>{{ personnel.diplome }}</td>
+                <td>{{ personnel.permis }}</td>
                 <td>
                   <button 
                     class="btn btn-sm btn-outline-primary me-2"
-                    @click="showModal(person)"
+                    @click="showModal(personnel)"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
                   <button 
                     class="btn btn-sm btn-outline-danger"
-                    @click="confirmDelete(person)"
+                    @click="confirmDelete(personnel)"
                   >
                     <i class="fas fa-trash"></i>
                   </button>
@@ -51,179 +56,67 @@
       </div>
     </div>
 
-    <!-- Modal -->
-    <div v-if="showForm" class="modal fade show" style="display: block">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              {{ selectedPerson ? 'Modifier' : 'Nouveau' }} Personnel
-            </h5>
-            <button type="button" class="btn-close" @click="closeModal"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="handleSubmit">
-              <div class="mb-3">
-                <label class="form-label">Type</label>
-                <select class="form-control" v-model="form.type" required>
-                  <option value="moniteur">Moniteur</option>
-                  <option value="secretaire">Secrétaire</option>
-                  <option value="proprietaire">Propriétaire</option>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Nom</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  v-model="form.nom"
-                  required
-                >
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Prénom</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  v-model="form.prenom"
-                  required
-                >
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input 
-                  type="email" 
-                  class="form-control" 
-                  v-model="form.email"
-                  required
-                >
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Téléphone</label>
-                <input 
-                  type="tel" 
-                  class="form-control" 
-                  v-model="form.telephone"
-                  required
-                >
-              </div>
-
-              <!-- Champs spécifiques pour les moniteurs -->
-              <template v-if="form.type === 'moniteur'">
-                <div class="mb-3">
-                  <label class="form-label">Spécialités</label>
-                  <select 
-                    class="form-control" 
-                    v-model="form.specialites" 
-                    multiple
-                  >
-                    <option value="voile">Voile</option>
-                    <option value="planche">Planche à voile</option>
-                    <option value="catamaran">Catamaran</option>
-                  </select>
-                </div>
-              </template>
-
-              <div class="modal-footer">
-                <button 
-                  type="button" 
-                  class="btn btn-secondary" 
-                  @click="closeModal"
-                >
-                  Annuler
-                </button>
-                <button 
-                  type="submit" 
-                  class="btn btn-primary"
-                  :disabled="loading"
-                >
-                  <span 
-                    v-if="loading" 
-                    class="spinner-border spinner-border-sm me-2"
-                  ></span>
-                  Enregistrer
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Modal Personnel -->
+    <PersonnelModal 
+      v-if="showForm"
+      :personnel="selectedPersonnel"
+      @save="handleSave"
+      @close="closeModal"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import PersonnelModal from '@/components/PersonnelModal.vue'
 
 export default {
-  name: 'Personnel',
+  name: 'PersonnelView',
+
+  components: {
+    PersonnelModal
+  },
 
   setup() {
     const store = useStore()
     const showForm = ref(false)
-    const loading = ref(false)
-    const selectedPerson = ref(null)
-    const form = ref({
-      type: 'moniteur',
-      nom: '',
-      prenom: '',
-      email: '',
-      telephone: '',
-      specialites: []
-    })
+    const selectedPersonnel = ref(null)
 
-    const personnel = computed(() => store.getters['personnel/allPersonnel'])
+    const personnels = computed(() => store.getters['personnel/allPersonnel'])
 
-    const showModal = (person = null) => {
-      selectedPerson.value = person
-      if (person) {
-        form.value = { ...person }
-      } else {
-        form.value = {
-          type: 'moniteur',
-          nom: '',
-          prenom: '',
-          email: '',
-          telephone: '',
-          specialites: []
-        }
-      }
+    const showModal = (personnel = null) => {
+      selectedPersonnel.value = personnel
       showForm.value = true
     }
 
     const closeModal = () => {
       showForm.value = false
-      selectedPerson.value = null
+      selectedPersonnel.value = null
     }
 
-    const handleSubmit = async () => {
-      loading.value = true
+    const handleSave = async (personnelData) => {
       try {
-        if (selectedPerson.value) {
+        if (selectedPersonnel.value) {
           await store.dispatch('personnel/updatePersonnel', {
-            id: selectedPerson.value.id,
-            data: form.value
+            id: selectedPersonnel.value.id,
+            data: personnelData
           })
         } else {
-          await store.dispatch('personnel/createPersonnel', form.value)
+          await store.dispatch('personnel/createPersonnel', personnelData)
         }
+        await store.dispatch('personnel/fetchPersonnel')
         closeModal()
       } catch (error) {
         console.error('Erreur lors de la sauvegarde:', error)
-      } finally {
-        loading.value = false
       }
     }
 
-    const confirmDelete = async (person) => {
-      if (confirm(`Voulez-vous vraiment supprimer ${person.prenom} ${person.nom} ?`)) {
+    const confirmDelete = async (personnel) => {
+      if (confirm(`Voulez-vous vraiment supprimer ${personnel.prenom} ${personnel.nom} du personnel ?`)) {
         try {
-          await store.dispatch('personnel/deletePersonnel', person.id)
+          await store.dispatch('personnel/deletePersonnel', personnel.id)
+          await store.dispatch('personnel/fetchPersonnel')
         } catch (error) {
           console.error('Erreur lors de la suppression:', error)
         }
@@ -235,14 +128,12 @@ export default {
     })
 
     return {
-      personnel,
       showForm,
-      loading,
-      selectedPerson,
-      form,
+      selectedPersonnel,
+      personnels,
       showModal,
       closeModal,
-      handleSubmit,
+      handleSave,
       confirmDelete
     }
   }
