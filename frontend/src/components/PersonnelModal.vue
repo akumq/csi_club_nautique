@@ -11,14 +11,6 @@
         <div class="modal-body">
           <form @submit.prevent="handleSubmit">
             <div class="mb-3">
-              <label class="form-label">Type de personnel</label>
-              <select class="form-control" v-model="form.type" required>
-                <option value="moniteur">Moniteur</option>
-                <option value="proprietaire">Propriétaire</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
               <label class="form-label">Nom</label>
               <input type="text" class="form-control" v-model="form.nom" required>
             </div>
@@ -26,6 +18,14 @@
             <div class="mb-3">
               <label class="form-label">Prénom</label>
               <input type="text" class="form-control" v-model="form.prenom" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Type</label>
+              <select class="form-control" v-model="form.type" required>
+                <option value="moniteur">Moniteur</option>
+                <option value="proprietaire">Propriétaire</option>
+              </select>
             </div>
 
             <div class="mb-3">
@@ -87,9 +87,9 @@ export default {
   setup(props, { emit }) {
     const loading = ref(false)
     const form = ref({
-      type: 'moniteur',
       nom: '',
       prenom: '',
+      type: 'moniteur',
       mail: '',
       adresse: '',
       telephone: '',
@@ -99,10 +99,7 @@ export default {
 
     onMounted(() => {
       if (props.personnel) {
-        form.value = { 
-          ...props.personnel,
-          type: props.personnel.type || 'moniteur'
-        }
+        form.value = { ...props.personnel }
       }
     })
 

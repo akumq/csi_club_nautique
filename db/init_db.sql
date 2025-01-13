@@ -74,9 +74,10 @@ CREATE TABLE Bateau (
 -- Table AchatForfait
 CREATE TABLE AchatForfait (
     id SERIAL PRIMARY KEY,
+    facture_id INT REFERENCES Facture(id),
+    nomOffre VARCHAR(255) NOT NULL,
     quantite INT NOT NULL CHECK (quantite >= 0),
-    prix INT NOT NULL CHECK (prix >= 0),
-    client_id INT
+    prix FLOAT NOT NULL CHECK (prix >= 0)
 );
 
 -- Table Facture
@@ -85,6 +86,7 @@ CREATE TABLE Facture (
     adresse VARCHAR(255) NOT NULL,
     montant FLOAT NOT NULL CHECK (montant >= 0),
     etat EEtat NOT NULL,
+    date_facture TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     client_id INT
 );
 
@@ -175,6 +177,7 @@ ALTER TABLE Voile ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCE
 ALTER TABLE PiedMat ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
 ALTER TABLE Bateau ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
 ALTER TABLE AchatForfait ADD CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES Client(id);
+ALTER TABLE AchatForfait ADD CONSTRAINT fk_facture_id FOREIGN KEY (facture_id) REFERENCES Facture(id);
 ALTER TABLE Facture ADD CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES Client(id);
 ALTER TABLE Reservation ADD CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES Client(id);
 ALTER TABLE Cours ADD CONSTRAINT fk_moniteur FOREIGN KEY (moniteur_id) REFERENCES Personnel(id);

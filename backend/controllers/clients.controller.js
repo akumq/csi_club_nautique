@@ -82,3 +82,63 @@ exports.deleteClient = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur' });
     }
 };
+
+// Ajouter cette nouvelle méthode
+exports.achatForfait = async (req, res) => {
+    const { client_id, offre } = req.body;
+
+    try {
+        // Démarrer une transaction
+        await pool.query('BEGIN');
+
+        // Créer la facture
+        const factureResult = await pool.query(
+            'INSERT INTO Facture (client_id, montant, adresse, etat) VALUES ($1, $2, $3, $4) RETURNING id',
+            [client_id, offre.prix, 'À remplir', 'Actif']
+        );
+        const factureId = factureResult.rows[0].id;
+
+        // Mettre à jour la quantité de forfait du client
+        await pool.query(
+            'UPDATE Client SET quantiteForfait = quantiteForfait + $1 WHERE id = $2',
+            [offre.quantite, client_id]
+        );
+
+        // Créer l'achat de forfait
+        await pool.query(
+            'INSERT INTO AchatForfait (client_id, facture_id, nomOffre, quantite, prix) VALUES ($1, $2, $3, $4, $5)',
+            [client_id, factureId, offre.nomoffre, offre.quantite, offre.prix]
+        );
+
+        // Valider la transaction
+        await pool.query('COMMIT');
+
+        res.status(200).json({ message: 'Forfait acheté avec succès' });
+    } catch (err) {
+        // En cas d'erreur, annuler la transaction
+        await pool.query('ROLLBACK');
+        console.error('Erreur lors de l\'achat du forfait:', err);
+        res.status(500).json({ error: 'Une erreur est survenue' });
+    }
+};
+
+// Récupérer les factures d'un client
+exports.getClientFactures = async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const result = await pool.query(`
+            SELECT f.id, f.montant, f.date_facture, f.etat,
+                   af.nomOffre, af.quantite, af.prix
+            FROM Facture f
+            LEFT JOIN AchatForfait af ON f.id = af.facture_id
+            WHERE f.client_id = $1
+            ORDER BY f.date_facture DESC
+        `, [id]);
+        
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des factures:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+};

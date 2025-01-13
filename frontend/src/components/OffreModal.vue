@@ -4,39 +4,25 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            {{ client ? 'Modifier' : 'Nouveau' }} Client
+            {{ offre ? 'Modifier' : 'Nouvelle' }} Offre
           </h5>
           <button type="button" class="btn-close" @click="$emit('close')"></button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="handleSubmit">
             <div class="mb-3">
-              <label class="form-label">Nom</label>
-              <input type="text" class="form-control" v-model="form.nom" required>
+              <label class="form-label">Nom de l'offre</label>
+              <input type="text" class="form-control" v-model="form.nomOffre" required>
             </div>
 
             <div class="mb-3">
-              <label class="form-label">Prénom</label>
-              <input type="text" class="form-control" v-model="form.prenom" required>
+              <label class="form-label">Prix (€)</label>
+              <input type="number" step="0.01" class="form-control" v-model.number="form.prix" required>
             </div>
 
             <div class="mb-3">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-control" v-model="form.mail" required>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Téléphone</label>
-              <input type="tel" class="form-control" v-model="form.telephone" required>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Niveau</label>
-              <select class="form-control" v-model="form.niveau" required>
-                <option value="Débutant">Débutant</option>
-                <option value="Intermédiaire">Intermédiaire</option>
-                <option value="Avancé">Avancé</option>
-              </select>
+              <label class="form-label">Quantité</label>
+              <input type="number" class="form-control" v-model.number="form.quantite" required>
             </div>
 
             <div class="modal-footer">
@@ -59,10 +45,10 @@
 import { ref, onMounted } from 'vue'
 
 export default {
-  name: 'ClientModal',
+  name: 'OffreModal',
   
   props: {
-    client: {
+    offre: {
       type: Object,
       default: null
     }
@@ -73,17 +59,14 @@ export default {
   setup(props, { emit }) {
     const loading = ref(false)
     const form = ref({
-      nom: '',
-      prenom: '',
-      mail: '',
-      telephone: '',
-      niveau: 'Débutant',
-      quantiteforfait: 0
+      nomOffre: '',
+      prix: 0,
+      quantite: 0
     })
 
     onMounted(() => {
-      if (props.client) {
-        form.value = { ...props.client }
+      if (props.offre) {
+        form.value = { ...props.offre }
       }
     })
 

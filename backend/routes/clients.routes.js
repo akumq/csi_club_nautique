@@ -8,5 +8,7 @@ router.get('/:id', authenticateToken, authorizeRole(['administrateur', 'propriet
 router.post('/', authenticateToken, authorizeRole(['administrateur', 'proprietaire']), clientsController.createClient);
 router.put('/:id', authenticateToken, authorizeRole(['administrateur', 'proprietaire']), clientsController.updateClient);
 router.delete('/:id', authenticateToken, authorizeRole(['administrateur', 'proprietaire']), clientsController.deleteClient);
+router.post('/achat-forfait', authenticateToken, clientsController.achatForfait);
+router.get('/:id/factures', authenticateToken, clientsController.getClientFactures);
 
 module.exports = router;

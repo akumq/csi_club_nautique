@@ -36,6 +36,11 @@
               <i class="fas fa-user-tie"></i> Personnel
             </router-link>
           </li>
+          <li class="nav-item">
+            <router-link to="/offres" class="nav-link">
+              <i class="fas fa-tags"></i> Offres
+            </router-link>
+          </li>
         </ul>
         
         <ul class="navbar-nav">

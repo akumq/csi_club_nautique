@@ -21,7 +21,6 @@
                 <th>Email</th>
                 <th>Téléphone</th>
                 <th>Diplôme</th>
-                <th>Permis</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -30,11 +29,17 @@
                 <td>{{ personnel.id }}</td>
                 <td>{{ personnel.nom }}</td>
                 <td>{{ personnel.prenom }}</td>
-                <td>{{ personnel.type }}</td>
+                <td>
+                  <span class="badge" :class="{
+                    'bg-primary': personnel.type === 'moniteur',
+                    'bg-success': personnel.type === 'proprietaire'
+                  }">
+                    {{ formatType(personnel.type) }}
+                  </span>
+                </td>
                 <td>{{ personnel.mail }}</td>
                 <td>{{ personnel.telephone }}</td>
                 <td>{{ personnel.diplome }}</td>
-                <td>{{ personnel.permis }}</td>
                 <td>
                   <button 
                     class="btn btn-sm btn-outline-primary me-2"
@@ -123,6 +128,14 @@ export default {
       }
     }
 
+    const formatType = (type) => {
+      const types = {
+        moniteur: 'Moniteur',
+        proprietaire: 'Propriétaire'
+      }
+      return types[type] || type
+    }
+
     onMounted(async () => {
       await store.dispatch('personnel/fetchPersonnel')
     })
@@ -134,8 +147,16 @@ export default {
       showModal,
       closeModal,
       handleSave,
-      confirmDelete
+      confirmDelete,
+      formatType
     }
   }
 }
-</script> 
+</script>
+
+<style scoped>
+.badge {
+  font-size: 0.9em;
+  padding: 0.5em 0.7em;
+}
+</style> 

@@ -3,6 +3,7 @@ import clients from './modules/clients'
 import activities from './modules/activities'
 import materials from './modules/materials'
 import personnel from './modules/personnel'
+import offres from './modules/offres'
 import auth from './modules/auth'
 
 export default createStore({
@@ -20,6 +21,7 @@ export default createStore({
     activities,
     materials,
     personnel,
+    offres,
     auth
   }
 }) 
