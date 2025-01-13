@@ -45,18 +45,6 @@
                     <i class="fas fa-edit"></i>
                   </button>
                   <button 
-                    class="btn btn-sm btn-outline-success me-2"
-                    @click="showAchatForfaitModal(client)"
-                  >
-                    <i class="fas fa-shopping-cart"></i>
-                  </button>
-                  <button 
-                    class="btn btn-sm btn-outline-info me-2"
-                    @click="showFacturesModal(client)"
-                  >
-                    <i class="fas fa-file-invoice"></i>
-                  </button>
-                  <button 
                     class="btn btn-sm btn-outline-danger"
                     @click="confirmDelete(client)"
                   >
@@ -198,6 +186,7 @@ export default {
 
     onMounted(async () => {
       await store.dispatch('clients/fetchClients')
+      console.log('Clients dans le composant:', clients.value)
     })
 
     return {

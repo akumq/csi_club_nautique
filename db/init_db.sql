@@ -2,7 +2,7 @@
 CREATE TYPE ENiveau AS ENUM ('Débutant', 'Intermédiaire', 'Avancé');
 CREATE TYPE EEtat AS ENUM ('Actif', 'Annulé', 'Terminé');
 CREATE TYPE EType_Res AS ENUM ('Cours', 'Location');
-CREATE TYPE EStatut AS ENUM ('Disponible', 'En maintenance', 'Hors service');
+CREATE TYPE EStatut AS ENUM ('Disponible', 'En maintenance', 'Hors service', 'Réservé');
 CREATE TYPE EType_Bateau AS ENUM ('Voilier', 'Catamaran', 'Planche à voile');
 CREATE TYPE EType_Materiel AS ENUM ('Voile', 'Flotteur', 'PiedMat', 'Bateau');
 

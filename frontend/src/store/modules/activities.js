@@ -10,15 +10,17 @@ export default {
   },
 
   getters: {
-    allActivities: state => state.activities,
-    activitiesByDate: state => date => {
-      return state.activities.filter(activity => {
-        const activityDate = new Date(activity.date)
-        return activityDate.toDateString() === date.toDateString()
+    activitiesByDate: (state) => (date) => {
+      const dateStr = date.toISOString().split('T')[0]
+      console.log('State activities:', state.activities)
+      console.log('Looking for date:', dateStr)
+      const filtered = state.activities.filter(activity => {
+        console.log('Comparing:', activity.date, 'with', dateStr)
+        return activity.date === dateStr
       })
-    },
-    isLoading: state => state.loading,
-    error: state => state.error
+      console.log('Filtered activities:', filtered)
+      return filtered
+    }
   },
 
   mutations: {
@@ -31,17 +33,8 @@ export default {
     SET_ERROR(state, error) {
       state.error = error
     },
-    ADD_ACTIVITY(state, activity) {
-      state.activities.push(activity)
-    },
-    UPDATE_ACTIVITY(state, updatedActivity) {
-      const index = state.activities.findIndex(a => a.id === updatedActivity.id)
-      if (index !== -1) {
-        state.activities.splice(index, 1, updatedActivity)
-      }
-    },
     DELETE_ACTIVITY(state, id) {
-      state.activities = state.activities.filter(a => a.id !== id)
+      state.activities = state.activities.filter(activity => activity.id !== id);
     }
   },
 
@@ -49,13 +42,26 @@ export default {
     async fetchActivities({ commit }, { start, end }) {
       commit('SET_LOADING', true)
       try {
-        const activities = await ApiService.get('/activities', {
-          params: { start, end }
-        })
-        commit('SET_ACTIVITIES', activities)
-        return activities
+        const response = await ApiService.get(`/activities?start=${start}&end=${end}`)
+        console.log('API Response:', response)
+        
+        // Vérifier et transformer les données si nécessaire
+        const formattedActivities = response.map(activity => ({
+          ...activity,
+          date: activity.date.split('T')[0], // S'assurer que la date est au bon format
+          details: {
+            ...activity.details,
+            heureDebut: activity.details.heureDebut || '',
+            heureFin: activity.details.heureFin || ''
+          }
+        }))
+        
+        console.log('Formatted activities:', formattedActivities)
+        commit('SET_ACTIVITIES', formattedActivities)
       } catch (error) {
+        console.error('Error fetching activities:', error)
         commit('SET_ERROR', error.message)
+        throw error
       } finally {
         commit('SET_LOADING', false)
       }
@@ -64,7 +70,6 @@ export default {
     async createActivity({ commit }, activityData) {
       try {
         const activity = await ApiService.post('/activities', activityData)
-        commit('ADD_ACTIVITY', activity)
         return activity
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -75,7 +80,6 @@ export default {
     async updateActivity({ commit }, { id, data }) {
       try {
         const activity = await ApiService.put(`/activities/${id}`, data)
-        commit('UPDATE_ACTIVITY', activity)
         return activity
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -85,11 +89,11 @@ export default {
 
     async deleteActivity({ commit }, id) {
       try {
-        await ApiService.delete(`/activities/${id}`)
-        commit('DELETE_ACTIVITY', id)
+        await ApiService.delete(`/activities/${id}`);
+        commit('DELETE_ACTIVITY', id);
       } catch (error) {
-        commit('SET_ERROR', error.message)
-        throw error
+        console.error('Erreur lors de la suppression de l\'activité:', error);
+        throw error;
       }
     }
   }

@@ -4,52 +4,62 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            {{ formattedDate }}
+            {{ formatDate(date) }}
           </h5>
           <button type="button" class="btn-close" @click="$emit('close')"></button>
         </div>
         <div class="modal-body">
-          <div class="d-flex justify-content-end mb-3">
+          <div class="d-flex justify-content-between mb-3">
+            <div class="btn-group">
+              <button 
+                v-for="type in activityTypes" 
+                :key="type"
+                class="btn btn-outline-secondary"
+                :class="{ active: selectedTypes.includes(type) }"
+                @click="toggleActivityType(type)"
+              >
+                <i :class="getActivityTypeIcon(type)"></i>
+                {{ type }}
+              </button>
+            </div>
             <button class="btn btn-primary" @click="$emit('add-activity')">
               <i class="fas fa-plus"></i> Nouvelle activité
             </button>
           </div>
           
-          <div class="schedule-content">
+          <div class="time-slots">
             <div v-for="hour in hours" :key="hour" class="time-slot">
               <div class="time-label">{{ formatHour(hour) }}</div>
-              <div class="time-activities">
+              <div class="activities-container">
                 <div 
-                  v-for="activity in getActivitiesByHour(hour)" 
+                  v-for="activity in getActivitiesByHour(hour)"
                   :key="activity.id"
-                  class="activity"
-                  :class="activity.typeActivite.toLowerCase()"
+                  class="activity-card"
+                  :class="[
+                    activity.typeActivite.toLowerCase(),
+                    getActivityStatus(activity)
+                  ]"
+                  @click="$emit('edit-activity', activity)"
                 >
                   <div class="activity-header">
-                    <strong>{{ activity.typeActivite }}</strong>
-                    <span>{{ activity.details.heureDebut }} - {{ activity.details.heureFin }}</span>
+                    <span class="activity-type">{{ getActivityLabel(activity) }}</span>
+                    <span class="activity-time">
+                      {{ formatTime(activity.details.heureDebut) }} - 
+                      {{ formatTime(activity.details.heureFin) }}
+                    </span>
                   </div>
                   <div class="activity-details">
                     <template v-if="activity.typeActivite === 'Cours'">
                       <div>Niveau: {{ activity.details.niveau }}</div>
                       <div>Moniteur: {{ getMoniteurName(activity.details.moniteur_id) }}</div>
                     </template>
-                    <template v-else>
-                      <div>Client: {{ getClientName(activity.clientId) }}</div>
-                      <div>Matériel: {{ getMaterielsList(activity.materiels) }}</div>
+                    <template v-else-if="activity.typeActivite === 'Location'">
+                      <div>Client: {{ getClientName(activity.details.client_id) }}</div>
+                      <div>Matériel: {{ getMaterielInfo(activity.details.materiel_id) }}</div>
                     </template>
                   </div>
                   <div class="activity-actions">
-                    <button 
-                      class="btn btn-sm btn-outline-primary"
-                      @click="$emit('edit-activity', activity)"
-                    >
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button 
-                      class="btn btn-sm btn-outline-danger"
-                      @click="confirmDelete(activity)"
-                    >
+                    <button @click="confirmDelete(activity)" class="btn btn-link text-danger">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>
@@ -64,15 +74,15 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
   name: 'DayScheduleModal',
   
   props: {
-    day: {
-      type: Object,
+    date: {
+      type: Date,
       required: true
     },
     activities: {
@@ -81,42 +91,73 @@ export default {
     }
   },
 
-  emits: ['close', 'add-activity', 'edit-activity'],
+  emits: ['close', 'add-activity', 'edit-activity', 'delete-activity'],
 
   setup(props) {
+    console.log('DayScheduleModal props:', props)
+
     const store = useStore()
-    const hours = Array.from({ length: 12 }, (_, i) => i + 8) // 8h à 19h
+    const selectedTypes = ref(['Cours', 'Location'])
+    const hours = Array.from({ length: 24 }, (_, i) => i)
+    const activityTypes = ['Cours', 'Location']
 
-    const formattedDate = computed(() => {
-      return new Date(props.day.date).toLocaleDateString('fr-FR', {
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString('fr-FR', {
         weekday: 'long',
-        day: 'numeric',
+        year: 'numeric',
         month: 'long',
-        year: 'numeric'
+        day: 'numeric'
       })
-    })
+    }
 
-    const formatHour = (hour) => `${hour}:00`
+    const formatHour = (hour) => {
+      return `${hour.toString().padStart(2, '0')}:00`
+    }
+
+    const formatTime = (time) => {
+      return time.substring(0, 5)
+    }
+
+    const getActivityTypeIcon = (type) => {
+      switch (type) {
+        case 'Cours': return 'fas fa-graduation-cap'
+        case 'Location': return 'fas fa-ship'
+        default: return 'fas fa-calendar'
+      }
+    }
 
     const getActivitiesByHour = (hour) => {
+      console.log('Getting activities for hour:', hour)
+      console.log('Available activities:', props.activities)
       return props.activities.filter(activity => {
+        if (!selectedTypes.value.includes(activity.typeActivite)) return false
         const activityHour = parseInt(activity.details.heureDebut.split(':')[0])
         return activityHour === hour
       })
     }
 
-    const getMoniteurName = (moniteurId) => {
-      const moniteur = store.getters['personnel/getPersonnelById'](moniteurId)
+    const getMoniteurName = (id) => {
+      const moniteur = store.getters['personnel/getPersonnelById'](id)
       return moniteur ? `${moniteur.prenom} ${moniteur.nom}` : 'Inconnu'
     }
 
-    const getClientName = (clientId) => {
-      const client = store.getters['clients/getClientById'](clientId)
+    const getClientName = (id) => {
+      const client = store.getters['clients/getClientById'](id)
       return client ? `${client.prenom} ${client.nom}` : 'Inconnu'
     }
 
-    const getMaterielsList = (materiels) => {
-      return materiels.map(m => m.type).join(', ')
+    const getMaterielInfo = (id) => {
+      const materiel = store.getters['materials/getMaterielById'](id)
+      return materiel ? `${materiel.type} #${materiel.numero}` : 'Inconnu'
+    }
+
+    const toggleActivityType = (type) => {
+      const index = selectedTypes.value.indexOf(type)
+      if (index === -1) {
+        selectedTypes.value.push(type)
+      } else {
+        selectedTypes.value.splice(index, 1)
+      }
     }
 
     const confirmDelete = (activity) => {
@@ -125,15 +166,40 @@ export default {
       }
     }
 
+    const getActivityStatus = (activity) => {
+      if (!activity.details?.etat) return '';
+      return activity.details.etat.toLowerCase();
+    };
+
+    const getActivityLabel = (activity) => {
+      switch (activity.typeActivite) {
+        case 'Cours':
+          return `Cours ${activity.details.niveau}`;
+        case 'Location':
+          return 'Location';
+        case 'Reservation':
+          return 'Réservation';
+        default:
+          return activity.typeActivite;
+      }
+    };
+
     return {
       hours,
-      formattedDate,
+      activityTypes,
+      selectedTypes,
+      formatDate,
       formatHour,
+      formatTime,
+      getActivityTypeIcon,
       getActivitiesByHour,
       getMoniteurName,
       getClientName,
-      getMaterielsList,
-      confirmDelete
+      getMaterielInfo,
+      toggleActivityType,
+      confirmDelete,
+      getActivityStatus,
+      getActivityLabel
     }
   }
 }
@@ -144,23 +210,86 @@ export default {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
+.schedule-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.time-slots {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
 .time-slot {
   display: flex;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 4px;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  min-height: 60px;
 }
 
 .time-label {
   width: 80px;
+  padding: 8px;
   font-weight: bold;
+  color: #666;
+  background: #f8f9fa;
 }
 
-.time-activities {
+.activities-container {
   flex: 1;
-  margin-left: 10px;
+  padding: 8px;
 }
 
-/* Autres styles... */
+.activity-card {
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.activity-card:hover {
+  filter: brightness(0.95);
+}
+
+.activity-card.cours {
+  background-color: rgba(25, 135, 84, 0.1);
+  border-left: 4px solid #198754;
+}
+
+.activity-card.location {
+  background-color: rgba(13, 110, 253, 0.1);
+  border-left: 4px solid #0d6efd;
+}
+
+.activity-card.annule {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.activity-time {
+  font-weight: bold;
+  color: #666;
+}
+
+.activity-details {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.activity-details > div {
+  margin-bottom: 4px;
+}
+
+.activity-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
 </style> 

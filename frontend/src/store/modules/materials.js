@@ -17,7 +17,7 @@ export default {
     },
     isLoading: state => state.loading,
     error: state => state.error,
-    getMaterialById: state => id => state.materials.find(m => m.id === id)
+    getMaterielById: state => id => state.materials.find(m => m.id === id)
   },
 
   mutations: {
@@ -41,6 +41,12 @@ export default {
     },
     DELETE_MATERIAL(state, id) {
       state.materials = state.materials.filter(m => m.id !== id)
+    },
+    UPDATE_MATERIAL_STATUS(state, { id, status }) {
+      const material = state.materials.find(m => m.id === id);
+      if (material) {
+        material.statut = status; // Met à jour le statut du matériel
+      }
     }
   },
 
@@ -104,6 +110,31 @@ export default {
       } catch (error) {
         commit('SET_ERROR', error.message)
         throw error
+      }
+    },
+
+    async fetchAvailableMaterials({ commit }) {
+      commit('SET_LOADING', true);
+      try {
+        const response = await ApiService.get('/materiels');
+        commit('SET_MATERIALS', response);
+        return response;
+      } catch (error) {
+        console.error('Erreur lors du chargement des matériels:', error);
+        commit('SET_ERROR', error.message);
+        return []; // Retourner un tableau vide en cas d'erreur
+      } finally {
+        commit('SET_LOADING', false);
+      }
+    },
+
+    async updateMaterialStatus({ commit }, { id, status }) {
+      try {
+        await ApiService.put(`/materiels/${id}`, { statut: status });
+        commit('UPDATE_MATERIAL_STATUS', { id, status });
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du statut du matériel:', error);
+        throw error;
       }
     }
   }
