@@ -88,7 +88,8 @@ CREATE TABLE AchatForfait (
     facture_id INT,
     nomOffre VARCHAR(255) NOT NULL,
     quantite INT NOT NULL CHECK (quantite >= 0),
-    prix FLOAT NOT NULL CHECK (prix >= 0)
+    prix FLOAT NOT NULL CHECK (prix >= 0),
+    client_id INT
 );
 
 -- Table Reservation
@@ -198,8 +199,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO proprieta
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO proprietaire;
 
 -- Droits pour le moniteur
-GRANT SELECT ON Cours, Materiel, Clients, AchatForfait TO moniteur;
-GRANT INSERT ON Reservation, Cours, Location, Clients, Facture TO moniteur;
+GRANT SELECT ON Cours, Materiel, Client, AchatForfait TO moniteur;
+GRANT INSERT ON Reservation, Cours, Location, Client, Facture TO moniteur;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO moniteur;
 
 -- Ajouter cette ligne pour permettre à l'administrateur de créer des objets

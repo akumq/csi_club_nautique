@@ -62,11 +62,12 @@ export default {
       }
     },
 
-    async achatForfait({ dispatch }, { client_id, offre_id }) {
+    async achatForfait({ dispatch }, { client, offre, adresse }) {
       try {
         const response = await ApiService.post('/clients/achat-forfait', {
-          client_id,
-          offre_id
+          client_id: client.id,
+          offre_id: offre.id,
+          adresse: adresse
         })
         console.log('Achat de forfait réussi:', response);
         await dispatch('fetchClients')

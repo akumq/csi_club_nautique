@@ -85,7 +85,7 @@ exports.deleteClient = async (req, res) => {
 
 // Ajouter cette nouvelle méthode
 exports.achatForfait = async (req, res) => {
-    const { client_id, offre_id } = req.body;
+    const { client_id, offre_id, adresse } = req.body;
 
     try {
         // Vérifier que l'offre existe et récupérer ses informations
@@ -101,7 +101,7 @@ exports.achatForfait = async (req, res) => {
         // Créer la facture
         const factureResult = await pool.query(
             'INSERT INTO Facture (client_id, montant, adresse, etat) VALUES ($1, $2, $3, $4) RETURNING id',
-            [client_id, offre.prix, 'À remplir', 'Actif']
+            [client_id, offre.prix, adresse, 'Actif']
         );
         const factureId = factureResult.rows[0].id;
 
@@ -113,9 +113,9 @@ exports.achatForfait = async (req, res) => {
 
         // Créer l'achat de forfait avec référence à l'offre
         await pool.query(
-            'INSERT INTO AchatForfait (client_id, facture_id, offre_id, nomOffre, quantite, prix) VALUES ($1, $2, $3, $4, $5, $6)',
-            [client_id, factureId, offre_id, offre.nomoffre, offre.quantite, offre.prix]
-        );
+            'INSERT INTO AchatForfait (client_id, facture_id, nomOffre, quantite, prix) VALUES ($1, $2, $3, $4, $5)',
+            [client_id, factureId, offre.nomoffre, offre.quantite, offre.prix]
+        );g
 
         // Valider la transaction
         await pool.query('COMMIT');

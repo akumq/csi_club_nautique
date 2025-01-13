@@ -14,6 +14,11 @@
             </div>
 
             <div class="mb-3">
+              <label class="form-label">Adresse</label>
+              <input type="text" class="form-control" v-model="adresse" required />
+            </div>
+
+            <div class="mb-3">
               <label class="form-label">Offre</label>
               <select class="form-control" v-model="selectedOffre" required>
                 <option value="">Sélectionnez une offre</option>
@@ -60,6 +65,7 @@ export default {
     const loading = ref(false)
     const selectedOffre = ref(null)
     const offres = ref([])
+    const adresse = ref(props.client.adresse)
 
     onMounted(async () => {
       try {
@@ -76,8 +82,9 @@ export default {
       loading.value = true
       try {
         const achatData = {
-          client_id: props.client.id,
-          offre_id: selectedOffre.value.id
+          client: props.client,
+          offre: selectedOffre.value,
+          adresse: adresse.value
         }
         emit('save', achatData)
       } catch (error) {
@@ -91,7 +98,8 @@ export default {
       offres,
       selectedOffre,
       loading,
-      handleSubmit
+      handleSubmit,
+      adresse
     }
   }
 }

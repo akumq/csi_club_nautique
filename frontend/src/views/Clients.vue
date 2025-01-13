@@ -178,7 +178,11 @@ export default {
 
     const handleAchatForfait = async (achatData) => {
       try {
-        await store.dispatch('clients/achatForfait', achatData)
+        await store.dispatch('clients/achatForfait', {
+          client: selectedClient.value,
+          offre: achatData.offre,
+          adresse: achatData.adresse
+        })
         await store.dispatch('clients/fetchClients')
         closeAchatForfaitModal()
       } catch (error) {
