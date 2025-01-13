@@ -41,6 +41,11 @@
               <i class="fas fa-tags"></i> Offres
             </router-link>
           </li>
+          <li class="nav-item">
+            <router-link to="/parametres" class="nav-link">
+              <i class="fas fa-cogs"></i> Paramètres
+            </router-link>
+          </li>
         </ul>
         
         <ul class="navbar-nav">
@@ -81,6 +86,7 @@ export default {
     const router = useRouter()
     
     const currentUser = computed(() => store.getters.currentUser)
+    const isAdmin = computed(() => store.getters['hasRole']('administrateur'))
     
     const handleLogout = async () => {
       await store.dispatch('logout')
@@ -89,6 +95,7 @@ export default {
     
     return {
       currentUser,
+      isAdmin,
       handleLogout
     }
   }

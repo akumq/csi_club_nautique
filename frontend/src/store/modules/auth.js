@@ -3,12 +3,17 @@ import ApiService from '@/services/api.service'
 export default {
   state: {
     token: localStorage.getItem('token') || null,
-    user: JSON.parse(localStorage.getItem('user')) || null
+    user: JSON.parse(localStorage.getItem('user')) || null,
+    error: null
   },
 
   getters: {
     isAuthenticated: state => !!state.token,
-    currentUser: state => state.user
+    currentUser: state => state.user,
+    error: state => state.error,
+    hasRole: (state) => (role) => {
+      return state.user && state.user.roles && state.user.roles.includes(role)
+    }
   },
 
   mutations: {

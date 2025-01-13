@@ -32,11 +32,11 @@
 
             <div class="mb-3">
               <label class="form-label">Niveau</label>
-              <select class="form-control" v-model="form.niveau" required>
-                <option value="Débutant">Débutant</option>
-                <option value="Intermédiaire">Intermédiaire</option>
-                <option value="Avancé">Avancé</option>
-              </select>
+              <EnumSelect
+                enum-name="ENiveau"
+                v-model="form.niveau"
+                required
+              />
             </div>
 
             <div class="modal-footer">
@@ -57,6 +57,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import EnumSelect from '@/components/EnumSelect.vue'
 
 export default {
   name: 'ClientModal',
@@ -69,6 +70,10 @@ export default {
   },
 
   emits: ['save', 'close'],
+
+  components: {
+    EnumSelect
+  },
 
   setup(props, { emit }) {
     const loading = ref(false)

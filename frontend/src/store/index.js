@@ -5,6 +5,7 @@ import materials from './modules/materials'
 import personnel from './modules/personnel'
 import offres from './modules/offres'
 import auth from './modules/auth'
+import enums from './modules/enums'
 
 export default createStore({
   state: {
@@ -22,6 +23,7 @@ export default createStore({
     materials,
     personnel,
     offres,
-    auth
+    auth,
+    enums
   }
 }) 

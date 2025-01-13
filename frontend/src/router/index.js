@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import store from '@/store'
 import OffresView from '@/views/Offres.vue'
+import ParametresView from '@/views/Parametres.vue'
 
 const routes = [
   {
@@ -38,6 +39,12 @@ const routes = [
     name: 'offres',
     component: OffresView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/parametres',
+    name: 'Parametres',
+    component: ParametresView,
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/:pathMatch(.*)*',
