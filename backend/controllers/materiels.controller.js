@@ -100,6 +100,16 @@ exports.updateMateriel = async (req, res) => {
     const { statut, type, taille, capacite, bateau_type } = req.body;
 
     try {
+        // Vérifier si le matériel existe
+        const checkMateriel = await pool.query('SELECT * FROM Materiel WHERE id = $1', [id]);
+        if (checkMateriel.rows.length === 0) {
+            return res.status(404).json({ message: 'Matériel non trouvé' });
+        }
+
+        // Commencer une transaction
+        await pool.query('BEGIN');
+
+        // Mettre à jour le matériel principal
         const result = await pool.query(`
             UPDATE Materiel
             SET statut = $1, type = $2
@@ -107,26 +117,45 @@ exports.updateMateriel = async (req, res) => {
             RETURNING id
         `, [statut, type, id]);
 
-        if (result.rows.length > 0) {
-            const materielId = result.rows[0].id;
+        const materielId = result.rows[0].id;
 
-            // Mettre à jour les informations spécifiques au type de matériel
-            if (type === 'Voile') {
-                await pool.query('UPDATE Voile SET taille = $1 WHERE materiel_id = $2', [taille, materielId]);
-            } else if (type === 'Flotteur') {
-                await pool.query('UPDATE Flotteur SET capacite = $1 WHERE materiel_id = $2', [capacite, materielId]);
-            } else if (type === 'Bateau') {
-                await pool.query('UPDATE Bateau SET type = $1 WHERE materiel_id = $2', [bateau_type, materielId]);
-            } else if (type === 'PiedMat') {
-                await pool.query('UPDATE PiedMat SET materiel_id = $1 WHERE materiel_id = $2', [materielId, materielId]);
-            }
-
-            res.status(200).json({ message: 'Matériel mis à jour' });
-        } else {
-            res.status(404).json({ message: 'Matériel non trouvé' });
+        // Mettre à jour ou insérer les données spécifiques selon le type
+        if (type === 'Voile') {
+            await pool.query(`
+                INSERT INTO Voile (taille, materiel_id) 
+                VALUES ($1, $2)
+                ON CONFLICT (materiel_id) 
+                DO UPDATE SET taille = $1
+            `, [taille, materielId]);
+        } else if (type === 'Flotteur') {
+            await pool.query(`
+                INSERT INTO Flotteur (capacite, materiel_id) 
+                VALUES ($1, $2)
+                ON CONFLICT (materiel_id) 
+                DO UPDATE SET capacite = $1
+            `, [capacite, materielId]);
+        } else if (type === 'Bateau') {
+            await pool.query(`
+                INSERT INTO Bateau (type, materiel_id) 
+                VALUES ($1, $2)
+                ON CONFLICT (materiel_id) 
+                DO UPDATE SET type = $1
+            `, [bateau_type, materielId]);
+        } else if (type === 'PiedMat') {
+            await pool.query(`
+                INSERT INTO PiedMat (materiel_id) 
+                VALUES ($1)
+                ON CONFLICT (materiel_id) DO NOTHING
+            `, [materielId]);
         }
+
+        // Valider la transaction
+        await pool.query('COMMIT');
+
+        res.status(200).json({ message: 'Matériel mis à jour' });
     } catch (err) {
         console.error('Erreur lors de la mise à jour du matériel', err);
+        await pool.query('ROLLBACK');
         res.status(500).json({ error: 'Une erreur est survenue' });
     }
 };

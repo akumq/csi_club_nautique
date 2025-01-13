@@ -7,6 +7,8 @@ RUN npm install
 
 COPY . .
 
-EXPOSE ${PORT}
+RUN npm run build 
 
-CMD ["npm", "run", "start"]
+EXPOSE ${APP_PORT} 
+
+CMD ["npm", "run", "build"]

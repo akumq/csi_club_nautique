@@ -15,11 +15,22 @@ exports.loginUser = async (req, res) => {
         });
 
         // Vérifie si la connexion fonctionne
-        await pool.connect();
+        const client = await pool.connect();
+        
+        // Récupère le rôle de l'utilisateur
+        const roleQuery = await client.query(
+            'SELECT rolname FROM pg_roles WHERE rolname = $1',
+            [username]
+        );
+        
+        const userRole = roleQuery.rows[0]?.rolname || 'user';
+        
+        // Libère la connexion
+        client.release();
 
         // Génère un token JWT
         const token = jwt.sign(
-            { username: username, role: userRole }, // Stocke le rôle dans le token
+            { username: username, role: userRole },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRATION }
         );

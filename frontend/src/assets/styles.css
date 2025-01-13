@@ -1,0 +1,11 @@
+/* Styles globaux */
+.main-content {
+  padding: 20px;
+}
+
+/* Styles pour les modales */
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Autres styles... */ 
