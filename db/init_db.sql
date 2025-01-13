@@ -6,7 +6,8 @@ CREATE TYPE EStatut AS ENUM ('Disponible', 'En maintenance', 'Hors service', 'R�
 CREATE TYPE EType_Bateau AS ENUM ('Voilier', 'Catamaran', 'Planche à voile');
 CREATE TYPE EType_Materiel AS ENUM ('Voile', 'Flotteur', 'PiedMat', 'Bateau');
 
--- Création des tables --
+-- Création des tables sans les clés étrangères
+
 -- Table Client
 CREATE TABLE Client (
     id SERIAL PRIMARY KEY,
@@ -71,15 +72,6 @@ CREATE TABLE Bateau (
     materiel_id INT
 );
 
--- Table AchatForfait
-CREATE TABLE AchatForfait (
-    id SERIAL PRIMARY KEY,
-    facture_id INT REFERENCES Facture(id),
-    nomOffre VARCHAR(255) NOT NULL,
-    quantite INT NOT NULL CHECK (quantite >= 0),
-    prix FLOAT NOT NULL CHECK (prix >= 0)
-);
-
 -- Table Facture
 CREATE TABLE Facture (
     id SERIAL PRIMARY KEY,
@@ -88,6 +80,15 @@ CREATE TABLE Facture (
     etat EEtat NOT NULL,
     date_facture TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     client_id INT
+);
+
+-- Table AchatForfait
+CREATE TABLE AchatForfait (
+    id SERIAL PRIMARY KEY,
+    facture_id INT,
+    nomOffre VARCHAR(255) NOT NULL,
+    quantite INT NOT NULL CHECK (quantite >= 0),
+    prix FLOAT NOT NULL CHECK (prix >= 0)
 );
 
 -- Table Reservation
@@ -111,7 +112,7 @@ CREATE TABLE Cours (
     etat EEtat NOT NULL,
     nbParticipants INT NOT NULL CHECK (nbParticipants <= 10),
     moniteur_id INT,
-    reservation_id INT REFERENCES Reservation(id) ON DELETE CASCADE
+    reservation_id INT
 );
 
 -- Table Location
@@ -123,7 +124,7 @@ CREATE TABLE Location (
     etat EEtat NOT NULL,
     nbParticipants INT NOT NULL CHECK (nbParticipants > 0),
     client_id INT,
-    reservation_id INT REFERENCES Reservation(id) ON DELETE CASCADE
+    reservation_id INT
 );
 
 -- Table Reparation
@@ -164,14 +165,7 @@ CREATE TABLE Proprietaire (
     personnel_id INT
 );
 
--- Table reservation_materiel
-CREATE TABLE reservation_materiel (
-    reservation_id INT REFERENCES Reservation(id) ON DELETE CASCADE,
-    materiel_id INT REFERENCES Materiel(id) ON DELETE CASCADE,
-    PRIMARY KEY (reservation_id, materiel_id)
-);
-
--- Ajout des contraintes de clés étrangères
+-- Ajout des contraintes de clés étrangères à la fin
 ALTER TABLE Flotteur ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
 ALTER TABLE Voile ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
 ALTER TABLE PiedMat ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFERENCES Materiel(id);
@@ -187,20 +181,6 @@ ALTER TABLE Reparation ADD CONSTRAINT fk_materiel FOREIGN KEY (materiel_id) REFE
 ALTER TABLE Moniteur ADD CONSTRAINT fk_personnel FOREIGN KEY (personnel_id) REFERENCES Personnel(id);
 ALTER TABLE Proprietaire ADD CONSTRAINT fk_personnel FOREIGN KEY (personnel_id) REFERENCES Personnel(id);
 
--- Supprimer la table reservation_participants qui n'est plus nécessaire
-DROP TABLE IF EXISTS reservation_participants;
-
--- Modifier la contrainte sur nbParticipants dans Reservation
-ALTER TABLE Reservation DROP CONSTRAINT IF EXISTS reservation_nbparticipants_check;
-ALTER TABLE Reservation ADD CONSTRAINT reservation_nbparticipants_check CHECK (nbParticipants = 1);
-
--- Modifier la contrainte sur nbParticipants dans Cours
-ALTER TABLE Cours DROP CONSTRAINT IF EXISTS cours_nbparticipants_check;
-ALTER TABLE Cours ADD CONSTRAINT cours_nbparticipants_check CHECK (nbParticipants = 1);
-
--- Modifier la contrainte sur nbParticipants dans Location
-ALTER TABLE Location DROP CONSTRAINT IF EXISTS location_nbparticipants_check;
-ALTER TABLE Location ADD CONSTRAINT location_nbparticipants_check CHECK (nbParticipants = 1);
 
 -- Création des rôles
 -- CREATE ROLE administrateur WITH LOGIN PASSWORD 'admin_password';

@@ -85,9 +85,16 @@ exports.deleteClient = async (req, res) => {
 
 // Ajouter cette nouvelle méthode
 exports.achatForfait = async (req, res) => {
-    const { client_id, offre } = req.body;
+    const { client_id, offre_id } = req.body;
 
     try {
+        // Vérifier que l'offre existe et récupérer ses informations
+        const offreResult = await pool.query('SELECT * FROM Offre WHERE id = $1', [offre_id]);
+        if (offreResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Offre non trouvée' });
+        }
+        const offre = offreResult.rows[0];
+
         // Démarrer une transaction
         await pool.query('BEGIN');
 
@@ -104,10 +111,10 @@ exports.achatForfait = async (req, res) => {
             [offre.quantite, client_id]
         );
 
-        // Créer l'achat de forfait
+        // Créer l'achat de forfait avec référence à l'offre
         await pool.query(
-            'INSERT INTO AchatForfait (client_id, facture_id, nomOffre, quantite, prix) VALUES ($1, $2, $3, $4, $5)',
-            [client_id, factureId, offre.nomoffre, offre.quantite, offre.prix]
+            'INSERT INTO AchatForfait (client_id, facture_id, offre_id, nomOffre, quantite, prix) VALUES ($1, $2, $3, $4, $5, $6)',
+            [client_id, factureId, offre_id, offre.nomoffre, offre.quantite, offre.prix]
         );
 
         // Valider la transaction

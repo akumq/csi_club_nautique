@@ -108,6 +108,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import ActivityModal from '@/components/ActivityModal.vue'
 import DayScheduleModal from '@/components/DayScheduleModal.vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'DashboardView',
@@ -119,6 +120,7 @@ export default {
 
   setup() {
     const store = useStore()
+    const router = useRouter()
     const currentDate = ref(new Date())
     const selectedTypes = ref(['Cours', 'Location', 'Reservation'])
     const showActivityModal = ref(false)
@@ -266,11 +268,17 @@ export default {
     }
 
     const loadActivities = async () => {
-      const start = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1).toISOString();
-      const end = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0).toISOString();
+      try {
+        const start = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1).toISOString();
+        const end = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0).toISOString();
 
-
-      await store.dispatch('activities/fetchActivities', { start, end })
+        await store.dispatch('activities/fetchActivities', { start, end });
+      } catch (error) {
+        console.error('Erreur lors du chargement des activités:', error);
+        if (error.response?.status === 403) {
+          router.push('/login');
+        }
+      }
     }
 
     const showDaySchedule = (day) => {
@@ -282,11 +290,14 @@ export default {
       showActivityModal.value = true;
     }
 
-    onMounted(() => {
-      selectedDate.value = new Date();
+    onMounted(async () => {
+      try {
+        selectedDate.value = new Date();
+        await loadActivities();
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du tableau de bord:', error);
+      }
     });
-
-    onMounted(loadActivities)
 
     return {
       currentMonthName,

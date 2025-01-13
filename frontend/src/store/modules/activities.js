@@ -12,15 +12,10 @@ export default {
   getters: {
     activitiesByDate: (state) => (date) => {
       const dateStr = date.toISOString().split('T')[0]
-      console.log('State activities:', state.activities)
-      console.log('Looking for date:', dateStr)
-      const filtered = state.activities.filter(activity => {
-        console.log('Comparing:', activity.date, 'with', dateStr)
-        return activity.date === dateStr
-      })
-      console.log('Filtered activities:', filtered)
-      return filtered
-    }
+      return state.activities.filter(activity => activity.date === dateStr)
+    },
+    isLoading: state => state.loading,
+    error: state => state.error
   },
 
   mutations: {
@@ -34,7 +29,16 @@ export default {
       state.error = error
     },
     DELETE_ACTIVITY(state, id) {
-      state.activities = state.activities.filter(activity => activity.id !== id);
+      state.activities = state.activities.filter(activity => activity.id !== id)
+    },
+    ADD_ACTIVITY(state, activity) {
+      state.activities.push(activity)
+    },
+    UPDATE_ACTIVITY(state, updatedActivity) {
+      const index = state.activities.findIndex(a => a.id === updatedActivity.id)
+      if (index !== -1) {
+        state.activities.splice(index, 1, updatedActivity)
+      }
     }
   },
 
@@ -43,21 +47,20 @@ export default {
       commit('SET_LOADING', true)
       try {
         const response = await ApiService.get(`/activities?start=${start}&end=${end}`)
-        console.log('API Response:', response)
         
-        // Vérifier et transformer les données si nécessaire
+        // Formater les activités
         const formattedActivities = response.map(activity => ({
           ...activity,
-          date: activity.date.split('T')[0], // S'assurer que la date est au bon format
+          date: activity.date.split('T')[0],
           details: {
             ...activity.details,
-            heureDebut: activity.details.heureDebut || '',
-            heureFin: activity.details.heureFin || ''
+            heureDebut: activity.details?.heureDebut || '',
+            heureFin: activity.details?.heureFin || ''
           }
         }))
         
-        console.log('Formatted activities:', formattedActivities)
         commit('SET_ACTIVITIES', formattedActivities)
+        return formattedActivities
       } catch (error) {
         console.error('Error fetching activities:', error)
         commit('SET_ERROR', error.message)
@@ -69,8 +72,13 @@ export default {
 
     async createActivity({ commit }, activityData) {
       try {
-        const activity = await ApiService.post('/activities', activityData)
-        return activity
+        const response = await ApiService.post('/activities', activityData)
+        const newActivity = {
+          ...activityData,
+          id: response.id
+        }
+        commit('ADD_ACTIVITY', newActivity)
+        return response
       } catch (error) {
         commit('SET_ERROR', error.message)
         throw error
@@ -79,8 +87,9 @@ export default {
 
     async updateActivity({ commit }, { id, data }) {
       try {
-        const activity = await ApiService.put(`/activities/${id}`, data)
-        return activity
+        await ApiService.put(`/activities/${id}`, data)
+        commit('UPDATE_ACTIVITY', { id, ...data })
+        return { id, ...data }
       } catch (error) {
         commit('SET_ERROR', error.message)
         throw error
@@ -89,21 +98,10 @@ export default {
 
     async deleteActivity({ commit }, id) {
       try {
-        await ApiService.delete(`/activities/${id}`);
-        commit('DELETE_ACTIVITY', id);
+        await ApiService.delete(`/activities/${id}`)
+        commit('DELETE_ACTIVITY', id)
       } catch (error) {
-        console.error('Erreur lors de la suppression de l\'activité:', error);
-        throw error;
-      }
-    },
-
-    async addActivity({ commit }, activityData) {
-      try {
-        const activity = await ApiService.post('/activities', activityData)
-        commit('ADD_ACTIVITY', activity)
-        return activity
-      } catch (error) {
-        commit('SET_ERROR', error.message)
+        console.error('Erreur lors de la suppression de l\'activité:', error)
         throw error
       }
     }

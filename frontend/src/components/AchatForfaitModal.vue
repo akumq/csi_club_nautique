@@ -77,7 +77,7 @@ export default {
       try {
         const achatData = {
           client_id: props.client.id,
-          offre: selectedOffre.value
+          offre_id: selectedOffre.value.id
         }
         emit('save', achatData)
       } catch (error) {
@@ -95,4 +95,10 @@ export default {
     }
   }
 }
-</script> 
+</script>
+
+<style scoped>
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+</style> 

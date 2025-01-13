@@ -37,6 +37,19 @@ export default {
         throw error
       }
     },
+
+    async createClient({ dispatch }, clientData) {
+      try {
+        const response = await ApiService.post('/clients', clientData)
+        console.log('Client créé:', response);
+        await dispatch('fetchClients')
+        return response
+      } catch (error) {
+        console.error('Erreur lors de la création du client:', error)
+        throw error
+      }
+    },
+
     async fetchClientFactures({ commit }, clientId) {
       try {
         const response = await ApiService.get(`/clients/${clientId}/factures`)
@@ -48,10 +61,15 @@ export default {
         throw error
       }
     },
-    async achatForfait( achatData) {
+
+    async achatForfait({ dispatch }, { client_id, offre_id }) {
       try {
-        const response = await ApiService.post('/clients/achat-forfait', achatData)
+        const response = await ApiService.post('/clients/achat-forfait', {
+          client_id,
+          offre_id
+        })
         console.log('Achat de forfait réussi:', response);
+        await dispatch('fetchClients')
         return response
       } catch (error) {
         console.error('Erreur lors de l\'achat du forfait:', error)

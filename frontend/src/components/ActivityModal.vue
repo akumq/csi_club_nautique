@@ -1,6 +1,6 @@
 <template>
   <div class="modal fade show" style="display: block">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -10,197 +10,147 @@
         </div>
         <div class="modal-body">
           <form @submit.prevent="handleSubmit">
+            <!-- Type d'activité -->
             <div class="mb-3">
               <label class="form-label">Type d'activité</label>
-              <select 
-                class="form-control" 
-                v-model="form.typeActivite"
-                required
-              >
+              <select class="form-control" v-model="form.typeRes" required>
                 <option value="Cours">Cours</option>
                 <option value="Location">Location</option>
               </select>
             </div>
 
+            <!-- Date -->
             <div class="mb-3">
-              <label class="form-label">Heure de début</label>
-              <input 
-                type="time" 
-                class="form-control" 
-                v-model="form.heureDebut"
-                :class="{ 'is-invalid': timeError }"
-                required
-                @input="validateTimes"
-              >
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" v-model="form.date" required>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Heure de fin</label>
-              <input 
-                type="time" 
-                class="form-control" 
-                v-model="form.heureFin"
-                :class="{ 'is-invalid': timeError }"
-                required
-                @input="validateTimes"
-              >
-              <div class="invalid-feedback" v-if="timeError">
-                {{ timeError }}
+            <!-- Heures -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Heure de début</label>
+                <input type="time" class="form-control" v-model="form.details.heureDebut" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Heure de fin</label>
+                <input type="time" class="form-control" v-model="form.details.heureFin" required>
+                <div class="text-danger" v-if="timeError">{{ timeError }}</div>
               </div>
             </div>
 
-            <!-- Champs spécifiques pour les cours -->
-            <template v-if="form.typeActivite === 'Cours'">
+            <!-- Client -->
+            <div class="mb-3">
+              <label class="form-label">Client</label>
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  v-model="clientSearch"
+                  @input="searchClients"
+                  placeholder="Rechercher un client..."
+                >
+                <button 
+                  class="btn btn-outline-secondary" 
+                  type="button"
+                  @click="showClientsList = !showClientsList"
+                >
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+              <div v-if="showClientsList && filteredClients.length > 0" class="list-group mt-2">
+                <button
+                  v-for="client in filteredClients"
+                  :key="client.id"
+                  type="button"
+                  class="list-group-item list-group-item-action"
+                  @click="selectClient(client)"
+                >
+                  {{ client.prenom }} {{ client.nom }}
+                </button>
+              </div>
+              <div v-if="selectedClient" class="mt-2">
+                Client sélectionné: {{ selectedClient.prenom }} {{ selectedClient.nom }}
+              </div>
+            </div>
+
+            <!-- Champs spécifiques aux cours -->
+            <div v-if="form.typeRes === 'Cours'" class="mb-3">
               <div class="mb-3">
                 <label class="form-label">Niveau</label>
-                <select class="form-control" v-model="form.niveau" required>
-                  <option value="Débutant">Débutant</option>
-                  <option value="Intermédiaire">Intermédiaire</option>
-                  <option value="Avancé">Avancé</option>
-                </select>
+                <EnumSelect
+                  enum-name="ENiveau"
+                  v-model="form.details.niveau"
+                  required
+                />
               </div>
-
               <div class="mb-3">
                 <label class="form-label">Moniteur</label>
-                <select 
-                  class="form-control" 
-                  v-model="form.moniteur_id"
-                  required
-                >
-                  <option 
-                    v-for="moniteur in moniteurs" 
-                    :key="moniteur.id" 
-                    :value="moniteur.id"
-                  >
+                <select class="form-control" v-model="form.details.moniteur_id" required>
+                  <option value="">Sélectionnez un moniteur</option>
+                  <option v-for="moniteur in moniteurs" :key="moniteur.id" :value="moniteur.id">
                     {{ moniteur.prenom }} {{ moniteur.nom }}
                   </option>
                 </select>
               </div>
-            </template>
+            </div>
 
-            <!-- Champs spécifiques pour les locations -->
-            <template v-if="form.typeActivite === 'Location'">
-              <div class="mb-3">
-                <label class="form-label">Client</label>
-                <div class="input-group">
-                  <select 
-                    class="form-control" 
-                    v-model="form.client_id"
-                    required
-                  >
-                    <option value="">Sélectionner un client</option>
-                    <option 
-                      v-for="client in filteredClients" 
-                      :key="client.id" 
-                      :value="client.id"
+            <!-- Champs spécifiques aux locations -->
+            <div v-if="form.typeRes === 'Location'" class="mb-3">
+              <label class="form-label">Matériel</label>
+              <div class="list-group">
+                <div v-for="materiel in availableMaterials" :key="materiel.id" class="list-group-item">
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox"
+                      :value="materiel.id"
+                      v-model="form.details.materiels"
+                      :id="'materiel-' + materiel.id"
                     >
-                      {{ client.nom }} {{ client.prenom }} - {{ client.email }}
-                    </option>
-                  </select>
-                  <input
-                    type="text"
-                    class="form-control"
-                    v-model="clientSearch"
-                    placeholder="Rechercher un client..."
-                    @input="filterClients"
-                  >
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Tarif</label>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  v-model.number="form.tarif"
-                  required
-                  min="0"
-                >
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Caution</label>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  v-model.number="form.caution"
-                  required
-                  min="0"
-                >
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Matériels</label>
-                <div v-if="loading" class="text-center">
-                  <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Chargement...</span>
-                  </div>
-                </div>
-                <div v-else-if="availableMaterials.length === 0" class="alert alert-info">
-                  Aucun matériel disponible pour le moment
-                </div>
-                <div v-else>
-                  <div class="selected-materials mb-2" v-if="form.materiels.length > 0">
-                    <div 
-                      v-for="materielId in form.materiels" 
-                      :key="materielId"
-                      class="selected-material-item"
-                    >
-                      {{ getMaterielInfo(materielId) }}
-                      <button 
-                        type="button" 
-                        class="btn-close ms-2" 
-                        @click="removeMateriel(materielId)"
-                      ></button>
-                    </div>
-                  </div>
-                  <div class="materials-grid">
-                    <div 
-                      v-for="materiel in availableMaterials" 
-                      :key="materiel.id"
-                      class="material-card"
-                      :class="{ 'selected': form.materiels.includes(materiel.id) }"
-                      @click="toggleMateriel(materiel.id)"
-                    >
-                      <div class="material-info">
-                        <strong>{{ materiel.id }} # {{ materiel.type }}</strong>
-                        <span v-if="materiel.type === 'Voile' && materiel.taille">
-                          Taille: {{ materiel.taille }} m²
-                        </span>
-                        <span v-if="materiel.type === 'Flotteur' && materiel.capacite">
-                          Capacité: {{ materiel.capacite }} L
-                        </span>
-                        <span v-if="materiel.type === 'Bateau' && materiel.bateau_type">
-                          Type: {{ materiel.bateau_type }}
-                        </span>
-                      </div>
-                      <div class="material-status" :class="materiel.statut.toLowerCase()">
-                        {{ materiel.statut }}
-                      </div>
-                    </div>
+                    <label class="form-check-label" :for="'materiel-' + materiel.id">
+                      {{ materiel.type }} #{{ materiel.id }}
+                    </label>
                   </div>
                 </div>
               </div>
-            </template>
+            </div>
+
+            <!-- Informations communes -->
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Durée (heures)</label>
+                <input type="number" step="0.5" class="form-control" v-model.number="form.duree" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Tarif (€)</label>
+                <input type="number" step="0.01" class="form-control" v-model.number="form.tarif" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Caution (€)</label>
+                <input type="number" step="0.01" class="form-control" v-model.number="form.caution" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Nombre de participants</label>
+              <input type="number" class="form-control" v-model.number="form.nbParticipants" required min="1" :max="form.typeRes === 'Cours' ? 10 : undefined">
+            </div>
 
             <div class="modal-footer">
-              <button 
-                type="button" 
-                class="btn btn-secondary" 
-                @click="$emit('close')"
-              >
+              <button type="button" class="btn btn-secondary" @click="$emit('close')">
                 Annuler
               </button>
               <button 
-                type="submit" 
-                class="btn btn-primary"
-                :disabled="loading"
+                v-if="activity"
+                type="button" 
+                class="btn btn-danger me-2"
+                @click="handleDelete"
               >
-                <span 
-                  v-if="loading" 
-                  class="spinner-border spinner-border-sm me-2"
-                ></span>
-                Enregistrer
+                Supprimer
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="loading">
+                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ activity ? 'Mettre à jour' : 'Créer' }}
               </button>
             </div>
           </form>
@@ -211,86 +161,99 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import EnumSelect from './EnumSelect.vue'
 
 export default {
   name: 'ActivityModal',
   
+  components: {
+    EnumSelect
+  },
+
   props: {
     activity: {
       type: Object,
       default: null
     },
-    date: {
+    selectedDate: {
       type: Date,
       required: true
     }
   },
 
-  emits: ['save', 'close'],
+  emits: ['save', 'close', 'delete'],
 
-  setup(props) {
+  setup(props, { emit }) {
     const store = useStore()
     const loading = ref(false)
-    const moniteurs = ref([])
-    const clients = ref([])
-    const filteredClients = ref([])
-    const clientSearch = ref('')
-    const availableMaterials = ref([])
     const timeError = ref('')
+    const clientSearch = ref('')
+    const showClientsList = ref(false)
+    const selectedClient = ref(null)
+    const moniteurs = ref([])
 
     const form = ref({
-      typeActivite: props.activity?.typeActivite || 'Cours',
-      heureDebut: props.activity?.details.heureDebut || '',
-      heureFin: props.activity?.details.heureFin || '',
-      niveau: props.activity?.details.niveau || 'Débutant',
-      moniteur_id: props.activity?.details.moniteur_id || '',
-      client_id: props.activity?.details.client_id || '',
-      materiels: props.activity?.details.materiels?.map(m => m.id) || [],
-      tarif: props.activity?.details.tarif || 0,
-      caution: props.activity?.details.caution || 0
+      date: props.selectedDate.toISOString().split('T')[0],
+      typeRes: 'Cours',
+      duree: 1,
+      tarif: 0,
+      caution: 0,
+      nbParticipants: 1,
+      client_id: null,
+      details: {
+        heureDebut: '09:00',
+        heureFin: '10:00',
+        niveau: 'Débutant',
+        moniteur_id: null,
+        materiels: []
+      }
     })
 
-    const filterClients = () => {
-      if (!clients.value) return;
-      const search = clientSearch.value.toLowerCase().trim()
-      if (!search) {
-        filteredClients.value = clients.value
-        return
+    // Charger les données initiales
+    onMounted(async () => {
+      try {
+        // Charger les moniteurs
+        const moniteursList = await store.dispatch('personnel/fetchMoniteurs')
+        moniteurs.value = moniteursList
+
+        // Charger les matériels disponibles
+        await store.dispatch('materials/fetchAvailableMaterials')
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error)
       }
-      filteredClients.value = clients.value.filter(client => 
-        client.nom?.toLowerCase().includes(search) ||
-        client.prenom?.toLowerCase().includes(search) ||
+    })
+
+    // Calculer les matériels disponibles
+    const availableMaterials = computed(() => {
+      return store.getters['materials/availableMaterials']()
+    })
+
+    // Filtrer les clients
+    const clients = computed(() => store.getters['clients/allClients'])
+    const filteredClients = computed(() => {
+      const search = clientSearch.value.toLowerCase()
+      return clients.value.filter(client => 
+        client.nom.toLowerCase().includes(search) ||
+        client.prenom.toLowerCase().includes(search) ||
         client.email?.toLowerCase().includes(search)
       )
+    })
+
+    // Sélectionner un client
+    const selectClient = (client) => {
+      selectedClient.value = client
+      form.value.client_id = client.id
+      showClientsList.value = false
+      clientSearch.value = `${client.prenom} ${client.nom}`
     }
 
-    const getMaterielInfo = (id) => {
-      const materiel = store.getters['materials/getMaterielById'](id)
-      return materiel ? `${materiel.type} #${materiel.id}` : 'Inconnu'
-    }
-
-    const toggleMateriel = (materielId) => {
-      const index = form.value.materiels.indexOf(materielId)
-      if (index === -1) {
-        form.value.materiels.push(materielId)
-      } else {
-        form.value.materiels.splice(index, 1)
-      }
-    }
-
-    const removeMateriel = (materielId) => {
-      const index = form.value.materiels.indexOf(materielId)
-      if (index !== -1) {
-        form.value.materiels.splice(index, 1)
-      }
-    }
-
+    // Valider les heures
     const validateTimes = () => {
-      if (form.value.heureDebut && form.value.heureFin) {
-        const debut = form.value.heureDebut.split(':').map(Number)
-        const fin = form.value.heureFin.split(':').map(Number)
+      if (form.value.details.heureDebut && form.value.details.heureFin) {
+        const debut = form.value.details.heureDebut.split(':').map(Number)
+        const fin = form.value.details.heureFin.split(':').map(Number)
         
         const debutMinutes = debut[0] * 60 + debut[1]
         const finMinutes = fin[0] * 60 + fin[1]
@@ -304,82 +267,84 @@ export default {
       return true
     }
 
+    // Gérer la soumission
     const handleSubmit = async () => {
-      if (!validateTimes()) {
-        return; // Empêcher la soumission si les heures ne sont pas valides
-      }
+      if (!validateTimes()) return
 
-      loading.value = true;
+      loading.value = true
       try {
         const activityData = {
-          date: props.date,
-          typeActivite: form.value.typeActivite,
-          details: {
-            heureDebut: form.value.heureDebut,
-            heureFin: form.value.heureFin,
-            client_id: form.value.client_id,
-            tarif: form.value.tarif,
-            caution: form.value.caution,
-          },
-          materiels: form.value.materiels
-        };
-
-        await store.dispatch('activities/createActivity', activityData); // Appel à l'action Vuex
-
-        // Mettre à jour le statut des matériels
-        for (const materielId of form.value.materiels) {
-          await store.dispatch('materials/updateMaterialStatus', { id: materielId, status: 'En cours d\'utilisation' });
+          ...form.value,
+          date: form.value.date,
+          client_id: selectedClient.value?.id
         }
+
+        if (props.activity) {
+          await store.dispatch('activities/updateActivity', {
+            id: props.activity.id,
+            data: activityData
+          })
+        } else {
+          await store.dispatch('activities/createActivity', activityData)
+        }
+
+        emit('save')
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    onMounted(async () => {
-      try {
-        loading.value = true
-        // Charger les clients d'abord
-        const loadedClients = await store.dispatch('clients/fetchClients')
-        console.log('Clients chargés:', loadedClients)
-        clients.value = loadedClients
-        filteredClients.value = loadedClients // Initialiser avec tous les clients
-
-        // Charger le reste des données
-        const [moniteurResult, materialsResult] = await Promise.all([
-          store.dispatch('personnel/fetchMoniteurs'),
-          store.dispatch('materials/fetchAvailableMaterials')
-        ])
-
-        moniteurs.value = moniteurResult || []
-        availableMaterials.value = materialsResult || []
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error)
-        clients.value = []
-        filteredClients.value = []
-        moniteurs.value = []
-        availableMaterials.value = []
+        console.error('Erreur lors de la sauvegarde:', error)
       } finally {
         loading.value = false
       }
-    })
+    }
+
+    // Gérer la suppression
+    const handleDelete = async () => {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette activité ?')) {
+        loading.value = true
+        try {
+          await store.dispatch('activities/deleteActivity', props.activity.id)
+          emit('delete')
+        } catch (error) {
+          console.error('Erreur lors de la suppression:', error)
+        } finally {
+          loading.value = false
+        }
+      }
+    }
+
+    // Initialiser le formulaire si une activité est fournie
+    if (props.activity) {
+      form.value = {
+        date: props.activity.date,
+        typeRes: props.activity.typeRes,
+        duree: props.activity.duree,
+        tarif: props.activity.tarif,
+        caution: props.activity.caution,
+        nbParticipants: props.activity.nbParticipants,
+        client_id: props.activity.client_id,
+        details: props.activity.details
+      }
+      
+      if (props.activity.client_id) {
+        selectedClient.value = clients.value.find(c => c.id === props.activity.client_id)
+        if (selectedClient.value) {
+          clientSearch.value = `${selectedClient.value.prenom} ${selectedClient.value.nom}`
+        }
+      }
+    }
 
     return {
       form,
       loading,
-      moniteurs,
-      clients,
-      filteredClients,
-      clientSearch,
-      availableMaterials,
-      filterClients,
-      getMaterielInfo,
-      toggleMateriel,
-      removeMateriel,
       timeError,
-      validateTimes,
-      handleSubmit
+      clientSearch,
+      showClientsList,
+      selectedClient,
+      filteredClients,
+      moniteurs,
+      availableMaterials,
+      selectClient,
+      handleSubmit,
+      handleDelete
     }
   }
 }
@@ -390,86 +355,8 @@ export default {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-.materials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
-  max-height: 300px;
+.list-group {
+  max-height: 200px;
   overflow-y: auto;
-}
-
-.material-card {
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.material-card:hover {
-  background-color: #f8f9fa;
-}
-
-.material-card.selected {
-  border-color: #0d6efd;
-  background-color: rgba(13, 110, 253, 0.1);
-}
-
-.material-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.material-status {
-  font-size: 0.8em;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-.material-status.disponible {
-  background-color: rgba(25, 135, 84, 0.1);
-  color: #198754;
-}
-
-.selected-materials {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.selected-material-item {
-  background-color: #e9ecef;
-  padding: 4px 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-}
-
-.input-group {
-  display: flex;
-  gap: 8px;
-}
-
-.input-group select {
-  flex: 2;
-}
-
-.input-group input {
-  flex: 1;
-}
-
-.is-invalid {
-  border-color: #dc3545;
-}
-
-.invalid-feedback {
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 0.875em;
-  color: #dc3545;
 }
 </style> 

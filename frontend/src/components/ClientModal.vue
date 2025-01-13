@@ -45,7 +45,7 @@
               </button>
               <button type="submit" class="btn btn-primary" :disabled="loading">
                 <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-                Enregistrer
+                {{ client ? 'Mettre à jour' : 'Créer' }}
               </button>
             </div>
           </form>
@@ -95,7 +95,11 @@ export default {
     const handleSubmit = async () => {
       loading.value = true
       try {
-        emit('save', form.value)
+        const formData = { ...form.value }
+        if (!props.client) {
+          formData.quantiteforfait = 0
+        }
+        emit('save', formData)
       } catch (error) {
         console.error('Erreur lors de la sauvegarde:', error)
       } finally {
