@@ -53,15 +53,6 @@
               <input type="text" class="form-control" v-model="form.permis" required>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Statut</label>
-              <EnumSelect
-                enum-name="EStatut"
-                v-model="form.statut"
-                required
-              />
-            </div>
-
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" @click="$emit('close')">
                 Annuler
@@ -80,7 +71,6 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import EnumSelect from '@/components/EnumSelect.vue'
 
 export default {
   name: 'PersonnelModal',
@@ -95,7 +85,6 @@ export default {
   emits: ['save', 'close'],
 
   components: {
-    EnumSelect
   },
 
   setup(props, { emit }) {

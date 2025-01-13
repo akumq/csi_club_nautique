@@ -160,10 +160,14 @@ exports.createActivity = async (req, res) => {
         const heureFin = details.heureFin;
         const duree = calculateDuration(heureDebut, heureFin); // Fonction à définir
 
+        // Définir un tarif et une caution par défaut si non fournis
+        const tarif = details.tarif || 0; // Valeur par défaut
+        const caution = details.caution || 0; // Valeur par défaut
+
         // Créer la réservation
         const reservationResult = await pool.query(
-            'INSERT INTO Reservation (date, typeRes, duree) VALUES ($1, $2, $3) RETURNING id',
-            [date, typeActivite, duree] // Inclure la durée ici
+            'INSERT INTO Reservation (date, typeRes, duree, tarif, caution) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [date, typeActivite, duree, tarif, caution] // Inclure la caution ici
         );
 
         const reservationId = reservationResult.rows[0].id;
@@ -236,8 +240,8 @@ exports.updateActivity = async (req, res) => {
             date: date || null,
             duree: parseInt(duree) || 0,
             typeActivite: typeActivite || 'Reservation',
-            tarif: parseFloat(tarif) || 0,
-            caution: parseFloat(caution) || 0,
+            tarif: parseFloat(tarif) || 0, // Valeur par défaut
+            caution: parseFloat(caution) || 0, // Valeur par défaut
             nbParticipants: parseInt(nbParticipants) || 1,
             client_id: client_id ? parseInt(client_id) : null
         };

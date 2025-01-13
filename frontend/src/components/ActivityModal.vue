@@ -108,6 +108,23 @@
               </div>
 
               <div class="mb-3">
+                <label class="form-label">Moniteur</label>
+                <select 
+                  class="form-control" 
+                  v-model="form.moniteur_id"
+                  required
+                >
+                  <option 
+                    v-for="moniteur in moniteurs" 
+                    :key="moniteur.id" 
+                    :value="moniteur.id"
+                  >
+                    {{ moniteur.prenom }} {{ moniteur.nom }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="mb-3">
                 <label class="form-label">Tarif</label>
                 <input 
                   type="number" 
@@ -211,7 +228,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
@@ -224,7 +241,7 @@ export default {
     },
     date: {
       type: Date,
-      required: true
+      default: null
     }
   },
 
@@ -233,60 +250,54 @@ export default {
   setup(props, { emit }) {
     const store = useStore()
     const loading = ref(false)
-    const moniteurs = ref([])
-    const clients = ref([])
-    const filteredClients = ref([])
-    const clientSearch = ref('')
-    const availableMaterials = ref([])
+    const materials = ref([])
+    const selectedDate = ref(props.date)
     const timeError = ref('')
+    const clients = ref([])
+    const clientSearch = ref('')
+    
+    // Ajout de la variable moniteurs
+    const moniteurs = ref([])
 
+    // Ajout du formulaire
     const form = ref({
       typeActivite: props.activity?.typeActivite || 'Cours',
-      heureDebut: props.activity?.details.heureDebut || '',
-      heureFin: props.activity?.details.heureFin || '',
-      niveau: props.activity?.details.niveau || 'Débutant',
-      moniteur_id: props.activity?.details.moniteur_id || '',
-      client_id: props.activity?.details.client_id || '',
-      materiels: props.activity?.details.materiels?.map(m => m.id) || [],
-      tarif: props.activity?.details.tarif || 0,
-      caution: props.activity?.details.caution || 0
+      heureDebut: props.activity?.details?.heureDebut || '',
+      heureFin: props.activity?.details?.heureFin || '',
+      client_id: props.activity?.details?.client_id || '',
+      moniteur_id: props.activity?.details?.moniteur_id || '',
+      materiels: props.activity?.details?.materiels?.map(m => m.id) || []
     })
 
-    const filterClients = () => {
-      if (!clients.value) return;
-      const search = clientSearch.value.toLowerCase().trim()
-      if (!search) {
-        filteredClients.value = clients.value
-        return
-      }
-      filteredClients.value = clients.value.filter(client => 
-        client.nom?.toLowerCase().includes(search) ||
-        client.prenom?.toLowerCase().includes(search) ||
-        client.email?.toLowerCase().includes(search)
-      )
-    }
+    const availableMaterials = computed(() => {
+      return materials.value.filter(material => material.statut === 'Disponible')
+    })
 
-    const getMaterielInfo = (id) => {
-      const materiel = store.getters['materials/getMaterielById'](id)
-      return materiel ? `${materiel.type} #${materiel.id}` : 'Inconnu'
-    }
-
+    // Ajout de la fonction toggleMateriel
     const toggleMateriel = (materielId) => {
-      const index = form.value.materiels.indexOf(materielId)
+      const index = form.value.materiels.indexOf(materielId);
       if (index === -1) {
-        form.value.materiels.push(materielId)
+        form.value.materiels.push(materielId);
       } else {
-        form.value.materiels.splice(index, 1)
+        form.value.materiels.splice(index, 1);
       }
     }
 
+    // Ajout de la fonction removeMateriel
     const removeMateriel = (materielId) => {
-      const index = form.value.materiels.indexOf(materielId)
+      const index = form.value.materiels.indexOf(materielId);
       if (index !== -1) {
-        form.value.materiels.splice(index, 1)
+        form.value.materiels.splice(index, 1);
       }
     }
 
+    // Ajout de la fonction getMaterielInfo
+    const getMaterielInfo = (materielId) => {
+      const materiel = materials.value.find(m => m.id === materielId);
+      return materiel ? `${materiel.type} #${materiel.numero}` : 'Inconnu';
+    }
+
+    // Ajout de la fonction validateTimes
     const validateTimes = () => {
       if (form.value.heureDebut && form.value.heureFin) {
         const debut = form.value.heureDebut.split(':').map(Number)
@@ -306,80 +317,119 @@ export default {
 
     const handleSubmit = async () => {
       if (!validateTimes()) {
-        return; // Empêcher la soumission si les heures ne sont pas valides
+        return
       }
 
-      loading.value = true;
+      loading.value = true
       try {
         const activityData = {
-          date: props.date,
+          date: selectedDate.value,
           typeActivite: form.value.typeActivite,
           details: {
             heureDebut: form.value.heureDebut,
             heureFin: form.value.heureFin,
             client_id: form.value.client_id,
-            tarif: form.value.tarif,
-            caution: form.value.caution,
           },
           materiels: form.value.materiels
-        };
+        }
 
-        await addActivity(activityData); // Ajoutez l'activité
+        emit('save', activityData)
 
-        // Mettre à jour le statut des matériels
         for (const materielId of form.value.materiels) {
-          await store.dispatch('materials/updateMaterialStatus', { id: materielId, status: 'En cours d\'utilisation' });
+          await store.dispatch('materials/updateMaterialStatus', { 
+            id: materielId, 
+            status: 'En cours d\'utilisation' 
+          })
         }
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    onMounted(async () => {
-      try {
-        loading.value = true
-        // Charger les clients d'abord
-        const loadedClients = await store.dispatch('clients/fetchClients')
-        console.log('Clients chargés:', loadedClients)
-        clients.value = loadedClients
-        filteredClients.value = loadedClients // Initialiser avec tous les clients
-
-        // Charger le reste des données
-        const [moniteurResult, materialsResult] = await Promise.all([
-          store.dispatch('personnel/fetchMoniteurs'),
-          store.dispatch('materials/fetchAvailableMaterials')
-        ])
-
-        moniteurs.value = moniteurResult || []
-        availableMaterials.value = materialsResult || []
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error)
-        clients.value = []
-        filteredClients.value = []
-        moniteurs.value = []
-        availableMaterials.value = []
+        console.error('Erreur lors de la sauvegarde:', error)
       } finally {
         loading.value = false
       }
+    }
+
+    const handleDeleteActivity = async () => {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette activité ?')) {
+        loading.value = true
+        try {
+          await store.dispatch('activities/deleteActivity', props.activity.id)
+          emit('close')
+        } catch (error) {
+          console.error('Erreur lors de la suppression de l\'activité:', error)
+        } finally {
+          loading.value = false
+        }
+      }
+    }
+
+    // Ajout de la fonction pour charger les clients
+    const loadClients = async () => {
+      try {
+        const response = await store.dispatch('clients/fetchClients')
+        clients.value = response
+      } catch (error) {
+        console.error('Erreur lors du chargement des clients:', error)
+      }
+    }
+
+    // Chargement des clients au montage du composant
+    onMounted(() => {
+      loadClients()
+    })
+
+    // Ajout de la fonction pour charger les matériels
+    const loadMaterials = async () => {
+      try {
+        const response = await store.dispatch('materials/fetchAvailableMaterials')
+        materials.value = response
+      } catch (error) {
+        console.error('Erreur lors du chargement des matériels:', error)
+      }
+    }
+
+    // Chargement des matériels au montage du composant
+    onMounted(() => {
+      loadMaterials()
+    })
+
+    // Ajout de la fonction pour charger les moniteurs
+    const loadMoniteurs = async () => {
+      try {
+        const response = await store.dispatch('personnel/fetchMoniteurs')
+        moniteurs.value = response
+      } catch (error) {
+        console.error('Erreur lors du chargement des moniteurs:', error)
+      }
+    }
+
+    // Chargement des moniteurs au montage du composant
+    onMounted(() => {
+      loadMoniteurs()
+    })
+
+    // Ajout du computed pour filtrer les clients
+    const filteredClients = computed(() => {
+      const search = clientSearch.value.toLowerCase()
+      return clients.value.filter(client => 
+        client.nom.toLowerCase().includes(search) ||
+        client.prenom.toLowerCase().includes(search) ||
+        client.email.toLowerCase().includes(search)
+      )
     })
 
     return {
-      form,
       loading,
-      moniteurs,
-      clients,
-      filteredClients,
-      clientSearch,
+      form,
+      timeError,
       availableMaterials,
-      filterClients,
-      getMaterielInfo,
       toggleMateriel,
       removeMateriel,
-      timeError,
+      getMaterielInfo,
       validateTimes,
-      handleSubmit
+      handleSubmit,
+      handleDeleteActivity,
+      moniteurs,
+      filteredClients,
     }
   }
 }
@@ -388,88 +438,5 @@ export default {
 <style scoped>
 .modal {
   background-color: rgba(0, 0, 0, 0.5);
-}
-
-.materials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.material-card {
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.material-card:hover {
-  background-color: #f8f9fa;
-}
-
-.material-card.selected {
-  border-color: #0d6efd;
-  background-color: rgba(13, 110, 253, 0.1);
-}
-
-.material-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.material-status {
-  font-size: 0.8em;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-.material-status.disponible {
-  background-color: rgba(25, 135, 84, 0.1);
-  color: #198754;
-}
-
-.selected-materials {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.selected-material-item {
-  background-color: #e9ecef;
-  padding: 4px 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-}
-
-.input-group {
-  display: flex;
-  gap: 8px;
-}
-
-.input-group select {
-  flex: 2;
-}
-
-.input-group input {
-  flex: 1;
-}
-
-.is-invalid {
-  border-color: #dc3545;
-}
-
-.invalid-feedback {
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 0.875em;
-  color: #dc3545;
 }
 </style> 

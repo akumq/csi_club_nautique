@@ -71,15 +71,6 @@ CREATE TABLE Bateau (
     materiel_id INT
 );
 
--- Table AchatForfait
-CREATE TABLE AchatForfait (
-    id SERIAL PRIMARY KEY,
-    facture_id INT REFERENCES Facture(id),
-    nomOffre VARCHAR(255) NOT NULL,
-    quantite INT NOT NULL CHECK (quantite >= 0),
-    prix FLOAT NOT NULL CHECK (prix >= 0)
-);
-
 -- Table Facture
 CREATE TABLE Facture (
     id SERIAL PRIMARY KEY,
@@ -88,6 +79,16 @@ CREATE TABLE Facture (
     etat EEtat NOT NULL,
     date_facture TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     client_id INT
+);
+
+-- Table AchatForfait
+CREATE TABLE AchatForfait (
+    id SERIAL PRIMARY KEY,
+    facture_id INT REFERENCES Facture(id),
+    nomOffre VARCHAR(255) NOT NULL,
+    quantite INT NOT NULL CHECK (quantite >= 0),
+    prix FLOAT NOT NULL CHECK (prix >= 0),
+    client_id INT REFERENCES Client(id)
 );
 
 -- Table Reservation
