@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import store from '@/store'
 import OffresView from '@/views/Offres.vue'
 import ParametresView from '@/views/Parametres.vue'
+import PartenairesView from '@/views/Partenaires.vue'
 
 const routes = [
   {
@@ -20,6 +21,12 @@ const routes = [
     path: '/clients',
     name: 'Clients',
     component: () => import('@/views/Clients.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/partenaires',
+    name: 'Partenaires',
+    component: PartenairesView,
     meta: { requiresAuth: true }
   },
   {

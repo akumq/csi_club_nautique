@@ -19,6 +19,16 @@
             </div>
 
             <div class="mb-3">
+              <label class="form-label">Partenaire</label>
+              <select class="form-control" v-model="selectedPartenaire" required>
+                <option value="">Sélectionnez un partenaire</option>
+                <option v-for="partenaire in partenaires" :key="partenaire.id" :value="partenaire">
+                  {{ partenaire.nomcamping }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
               <label class="form-label">Offre</label>
               <select class="form-control" v-model="selectedOffre" required>
                 <option value="">Sélectionnez une offre</option>
@@ -64,7 +74,9 @@ export default {
     const store = useStore()
     const loading = ref(false)
     const selectedOffre = ref(null)
+    const selectedPartenaire = ref(null)
     const offres = ref([])
+    const partenaires = ref([])
     const adresse = ref(props.client.adresse)
 
     onMounted(async () => {
@@ -73,6 +85,13 @@ export default {
         offres.value = store.getters['offres/allOffres']
       } catch (error) {
         console.error('Erreur lors du chargement des offres:', error)
+      }
+
+      try {
+        await store.dispatch('partenaires/fetchPartenaires')
+        partenaires.value = store.getters['partenaires/allPartenaires']
+      } catch (error) {
+        console.error('Erreur lors du chargement des partenaires:', error)
       }
     })
 
@@ -84,6 +103,7 @@ export default {
         const achatData = {
           client: props.client,
           offre: selectedOffre.value,
+          partenaire: selectedPartenaire.value,
           adresse: adresse.value
         }
         emit('save', achatData)
@@ -97,6 +117,8 @@ export default {
     return {
       offres,
       selectedOffre,
+      partenaires,
+      selectedPartenaire,
       loading,
       handleSubmit,
       adresse

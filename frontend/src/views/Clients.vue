@@ -181,6 +181,7 @@ export default {
         await store.dispatch('clients/achatForfait', {
           client: selectedClient.value,
           offre: achatData.offre,
+          partenaire: achatData.partenaire,
           adresse: achatData.adresse
         })
         await store.dispatch('clients/fetchClients')

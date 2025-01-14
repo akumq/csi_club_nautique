@@ -6,6 +6,8 @@ const cors = require('cors');
 
 require('dotenv').config();
 
+// ... autres routes
+
 // Routes
 const clientsRoutes = require('./routes/clients.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -15,6 +17,7 @@ const enumRoutes = require('./routes/enum.routes');
 const materielRoutes = require('./routes/materiels.routes');
 const offresRoutes = require('./routes/offres.routes');
 const activitiesRoutes = require('./routes/activities.routes');
+const partenairesRoutes = require('./routes/partenaires.routes');
 
 // Auth
 const { authorizeRole } = require('./middleware/auth');
@@ -43,6 +46,7 @@ app.use('/api/enum', enumRoutes);
 app.use('/api/materiels', materielRoutes);
 app.use('/api/offres', offresRoutes);
 app.use('/api/activities', activitiesRoutes);
+app.use('/api/partenaires', partenairesRoutes); 
 
 // server
 app.listen(process.env.PORT, () => {

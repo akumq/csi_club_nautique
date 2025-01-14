@@ -57,6 +57,10 @@ export default {
     const store = useStore()
     const router = useRouter()
     
+    if (store.getters.isAuthenticated) {
+        router.push('/')
+    }
+    
     const form = ref({
       username: '',
       password: ''

@@ -37,6 +37,11 @@
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link class="nav-link" to="/partenaires">
+              <i class="fas fa-users"></i> Partenaires
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/offres" class="nav-link">
               <i class="fas fa-tags"></i> Offres
             </router-link>

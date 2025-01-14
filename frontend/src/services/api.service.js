@@ -24,6 +24,10 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       store.dispatch('logout')
       router.push('/login')
+    } else if (error.response?.status === 403) {
+      console.error('Accès interdit:', error.response.data.message);
+      store.dispatch('logout')
+      router.push('/login')
     }
     return Promise.reject(error)
   }

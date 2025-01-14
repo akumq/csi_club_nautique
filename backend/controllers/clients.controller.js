@@ -85,9 +85,16 @@ exports.deleteClient = async (req, res) => {
 
 // Ajouter cette nouvelle méthode
 exports.achatForfait = async (req, res) => {
-    const { client_id, offre_id, adresse } = req.body;
+    const { client_id, offre_id, adresse, partenaire_id } = req.body;
 
     try {
+        let partenaire = null; // Initialiser partenaire à null
+        // Vérifier que le partenaire existe et récupérer ses informations
+        const partenaireResult = await pool.query('SELECT * FROM Partenaire WHERE id = $1', [partenaire_id]);
+        if (partenaireResult.rows.length > 0) {
+            partenaire = partenaireResult.rows[0];
+        }
+
         // Vérifier que l'offre existe et récupérer ses informations
         const offreResult = await pool.query('SELECT * FROM Offre WHERE id = $1', [offre_id]);
         if (offreResult.rows.length === 0) {
@@ -95,13 +102,19 @@ exports.achatForfait = async (req, res) => {
         }
         const offre = offreResult.rows[0];
 
+        // Calculer le montant après réduction si partenaire est défini
+        let montant = offre.prix;
+        if (partenaire) {
+            montant *= (1 - partenaire.remise); // Appliquer la réduction
+        }
+
         // Démarrer une transaction
         await pool.query('BEGIN');
 
         // Créer la facture
         const factureResult = await pool.query(
             'INSERT INTO Facture (client_id, montant, adresse, etat) VALUES ($1, $2, $3, $4) RETURNING id',
-            [client_id, offre.prix, adresse, 'Actif']
+            [client_id, montant, adresse, 'Actif']
         );
         const factureId = factureResult.rows[0].id;
 
@@ -114,8 +127,8 @@ exports.achatForfait = async (req, res) => {
         // Créer l'achat de forfait avec référence à l'offre
         await pool.query(
             'INSERT INTO AchatForfait (client_id, facture_id, nomOffre, quantite, prix) VALUES ($1, $2, $3, $4, $5)',
-            [client_id, factureId, offre.nomoffre, offre.quantite, offre.prix]
-        );g
+            [client_id, factureId, offre.nomoffre, offre.quantite, montant] // Utiliser le montant après réduction
+        );
 
         // Valider la transaction
         await pool.query('COMMIT');
