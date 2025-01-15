@@ -152,7 +152,7 @@ export default {
       try {
         const maintenanceData = {
           ...form.value,
-          date: new Date().toISOString()
+          date: new Date()
         }
         emit('save', maintenanceData)
       } catch (error) {

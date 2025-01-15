@@ -151,12 +151,8 @@ export default {
       }
     },
 
-    async updateActivity({ commit, getters }, { id, data }) {
+    async updateActivity({ commit }, { id, data }) {
       // Vérifier les conflits d'horaires en excluant l'activité en cours de modification
-      if (getters.hasTimeConflict(data, id)) {
-        throw new Error('Conflit d\'horaires avec une activité existante')
-      }
-
       try {
         const activity = await ApiService.put(`/activities/${id}`, data)
         commit('UPDATE_ACTIVITY', activity)

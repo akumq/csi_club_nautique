@@ -12,8 +12,9 @@ export default {
   getters: {
     allMaterials: state => state.materials,
     availableMaterials: state => () => {
-      // Modifier la logique si la date est nécessaire
-      return state.materials.filter(m => m.disponible)
+      console.log('État des matériels:', state.materials)
+      // Retourner tous les matériels pour l'instant, sans filtrage
+      return state.materials
     },
     isLoading: state => state.loading,
     error: state => state.error,

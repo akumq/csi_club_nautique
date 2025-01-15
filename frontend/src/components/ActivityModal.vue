@@ -97,6 +97,9 @@
             <!-- Champs spécifiques aux locations -->
             <div v-if="form.typeRes === 'Location'" class="mb-3">
               <label class="form-label">Matériel</label>
+              <div v-if="availableMaterials.length === 0" class="alert alert-info">
+                Aucun matériel disponible
+              </div>
               <div class="list-group">
                 <div v-for="materiel in availableMaterials" :key="materiel.id" class="list-group-item">
                   <div class="form-check">
@@ -108,7 +111,7 @@
                       :id="'materiel-' + materiel.id"
                     >
                     <label class="form-check-label" :for="'materiel-' + materiel.id">
-                      {{ materiel.type }} #{{ materiel.id }}
+                      {{ materiel.type }} - {{ materiel.nom || `#${materiel.id}` }}
                     </label>
                   </div>
                 </div>
@@ -219,7 +222,7 @@ export default {
         moniteurs.value = moniteursList
 
         // Charger les matériels disponibles
-        await store.dispatch('materials/fetchAvailableMaterials')
+        await store.dispatch('materials/fetchMateriels')
 
         // Charger les clients
         await store.dispatch('clients/fetchClients')
@@ -248,7 +251,9 @@ export default {
 
     // Calculer les matériels disponibles
     const availableMaterials = computed(() => {
-      return store.getters['materials/availableMaterials']()
+      const materials = store.getters['materials/availableMaterials']()
+      console.log('Matériels disponibles:', materials)
+      return materials
     })
 
     // Récupérer tous les clients
