@@ -3,7 +3,7 @@ import store from '@/store'
 import router from '@/router'
 
 const apiClient = axios.create({
-  baseURL: (process.env.VUE_API_URL || 'http://localhost:3000') + '/api',
+  baseURL: ('http://localhost:3000') + '/api',
   headers: {
     'Content-Type': 'application/json'
   },

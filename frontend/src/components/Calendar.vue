@@ -110,50 +110,83 @@ export default {
       const date = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1)
       const lastDay = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0)
       
-      console.log('Building calendar days')
+      // Jours du mois précédent
+      const firstDay = date.getDay() || 7 // 1-7 (lundi-dimanche)
+      const prevMonthDays = firstDay - 1
       
+      if (prevMonthDays > 0) {
+        const prevMonth = new Date(date)
+        prevMonth.setDate(0)
+        for (let i = prevMonthDays - 1; i >= 0; i--) {
+          const dayDate = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), prevMonth.getDate() - i)
+          days.push({
+            number: prevMonth.getDate() - i,
+            date: dayDate,
+            isCurrentMonth: false,
+            isToday: dayDate.toDateString() === new Date().toDateString(),
+            activities: store.getters['activities/activitiesByDate'](dayDate)
+          })
+        }
+      }
+
       // Jours du mois actuel
-      const today = new Date()
       for (let i = 1; i <= lastDay.getDate(); i++) {
-        const currentDate = new Date(date.getFullYear(), date.getMonth(), i)
-        const activities = store.getters['activities/activitiesByDate'](currentDate)
-        console.log(`Day ${i} activities:`, activities)
+        const dayDate = new Date(date.getFullYear(), date.getMonth(), i)
         days.push({
           number: i,
-          date: currentDate,
+          date: dayDate,
           isCurrentMonth: true,
-          isToday: currentDate.toDateString() === today.toDateString(),
-          activities: activities || [] // S'assurer qu'on a toujours un tableau
+          isToday: dayDate.toDateString() === new Date().toDateString(),
+          activities: store.getters['activities/activitiesByDate'](dayDate)
         })
       }
 
       // Jours du mois suivant
       const remainingDays = 42 - days.length
-      for (let i = 1; i <= remainingDays; i++) {
-        const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, i)
-        days.push({
-          number: i,
-          date: nextMonth,
-          isCurrentMonth: false,
-          isToday: false,
-          activities: []
-        })
+      if (remainingDays > 0) {
+        for (let i = 1; i <= remainingDays; i++) {
+          const dayDate = new Date(date.getFullYear(), date.getMonth() + 1, i)
+          days.push({
+            number: i,
+            date: dayDate,
+            isCurrentMonth: false,
+            isToday: dayDate.toDateString() === new Date().toDateString(),
+            activities: store.getters['activities/activitiesByDate'](dayDate)
+          })
+        }
       }
 
       return days
     })
 
     const selectedDayActivities = computed(() => {
-      if (!selectedDay.value) return []
-      return store.getters['activities/activitiesByDate'](selectedDay.value.date)
+      if (selectedDay.value) {
+        return store.getters['activities/activitiesForSelectedDay'](selectedDay.value.date);
+      }
+      return [];
     })
 
-    const previousMonth = () => {
-      currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
+    const loadMonthActivities = async () => {
+      try {
+        const startDate = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1)
+        const endDate = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0)
+        await store.dispatch('activities/fetchActivities', {
+          start: startDate.toISOString(),
+          end: endDate.toISOString()
+        })
+      } catch (error) {
+        console.error('Erreur lors du chargement des activités:', error)
+      }
     }
 
-    const nextMonth = () => {
+    const previousMonth = async () => {
+      currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
+      await loadMonthActivities()
+    }
+
+    const nextMonth = async () => {
       currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1)
+      await loadMonthActivities()
     }
 
     const showDaySchedule = (day) => {
@@ -194,28 +227,6 @@ export default {
       }
     }
 
-    const loadActivities = async () => {
-      try {
-        const start = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1)
-        const end = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0)
-        
-        console.log('Fetching activities from:', start, 'to:', end)
-        
-        // Formater les dates directement pour l'URL
-        const startStr = start.toISOString()
-        const endStr = end.toISOString()
-        
-        console.log('Formatted dates:', startStr, endStr)
-        
-        await store.dispatch('activities/fetchActivities', {
-          start: startStr,
-          end: endStr
-        })
-      } catch (error) {
-        console.error('Erreur lors du chargement des activités:', error)
-      }
-    }
-
     const filterDayActivities = (activities) => {
       if (!activities) return [];
       return activities
@@ -251,7 +262,7 @@ export default {
     };
 
     onMounted(async () => {
-      await loadActivities()
+      await loadMonthActivities()
     })
 
     return {
@@ -275,6 +286,7 @@ export default {
       formatTime,
       selectedTypes,
       editActivity,
+      loadMonthActivities
     }
   }
 }

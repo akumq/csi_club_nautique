@@ -58,18 +58,18 @@
           
           <div class="activities-list">
             <div 
-              v-for="activity in filterActivities(day.activities)"
+              v-for="activity in day.activities"
               :key="activity.id"
               class="activity-item"
-              :class="activity.typeActivite.toLowerCase()"
+              :class="activity.typeres.toLowerCase()"
               @click="editActivity(activity)"
             >
               <div class="activity-time">
                 {{ formatTime(activity.details.heureDebut) }}
               </div>
               <div class="activity-info">
-                <strong>{{ activity.typeActivite }}</strong>
-                <template v-if="activity.typeActivite === 'Cours'">
+                <strong>{{ activity.typeres }}</strong>
+                <template v-if="activity.typeres === 'Cours'">
                   <div>Niveau: {{ activity.details.niveau }}</div>
                 </template>
                 <template v-else>
@@ -100,6 +100,15 @@
       @save="handleActivitySave"
       @close="closeActivityModal"
     />
+
+    <div>
+      <h2>Liste des Activités</h2>
+      <ul>
+        <li v-for="activity in activities" :key="activity.id">
+          {{ activity.details }} - {{ activity.date }}
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -127,7 +136,7 @@ export default {
     const selectedActivity = ref(null)
     const selectedDate = ref(null)
     const selectedDay = ref(null)
-
+    const selectedClient = ref(null)
     const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
     const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
                    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
@@ -136,14 +145,14 @@ export default {
     const currentMonthName = computed(() => months[currentDate.value.getMonth()])
     const currentYear = computed(() => currentDate.value.getFullYear())
 
-    const previousMonth = () => {
+    const previousMonth = async () => {
       currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
-      loadActivities()
+      await loadActivities()
     }
 
-    const nextMonth = () => {
+    const nextMonth = async () => {
       currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1)
-      loadActivities()
+      await loadActivities()
     }
 
     const calendarDays = computed(() => {
@@ -156,14 +165,16 @@ export default {
       if (firstDay === -1) firstDay = 6
       const prevMonth = new Date(date)
       prevMonth.setDate(0)
+  
       for (let i = firstDay - 1; i >= 0; i--) {
         const dayDate = new Date(prevMonth.getTime() - i * 24 * 60 * 60 * 1000)
+        const formattedDate = dayDate.toISOString().split('T')[0]
         days.push({
           number: prevMonth.getDate() - i,
           date: dayDate,
           isCurrentMonth: false,
           isToday: false,
-          activities: store.getters['activities/activitiesByDate'](dayDate)
+          activities: store.getters['activities/getActivitiesByDate'](formattedDate)
         })
       }
 
@@ -171,25 +182,27 @@ export default {
       const today = new Date()
       for (let i = 1; i <= lastDay.getDate(); i++) {
         const currentDate = new Date(date.getFullYear(), date.getMonth(), i)
+        const formattedDate = currentDate.toISOString().split('T')[0]
         days.push({
           number: i,
           date: currentDate,
           isCurrentMonth: true,
           isToday: currentDate.toDateString() === today.toDateString(),
-          activities: store.getters['activities/activitiesByDate'](currentDate)
+          activities: store.getters['activities/getActivitiesByDate'](formattedDate)
         })
       }
 
       // Jours du mois suivant
-      const remainingDays = 42 - days.length // Pour avoir 6 semaines complètes
+      const remainingDays = 42 - days.length
       for (let i = 1; i <= remainingDays; i++) {
         const nextDate = new Date(date.getFullYear(), date.getMonth() + 1, i)
+        const formattedDate = nextDate.toISOString().split('T')[0]
         days.push({
           number: i,
           date: nextDate,
           isCurrentMonth: false,
           isToday: false,
-          activities: store.getters['activities/activitiesByDate'](nextDate)
+          activities: store.getters['activities/getActivitiesByDate'](formattedDate)
         })
       }
 
@@ -197,7 +210,9 @@ export default {
     })
 
     const filterActivities = (activities) => {
-      return activities.filter(activity => selectedTypes.value.includes(activity.typeActivite))
+      console.log(activities.filter(activity => selectedTypes.value.includes(activity.typeActivite)));
+      if (!Array.isArray(activities)) return [];
+      return activities.filter(activity => selectedTypes.value.includes(activity.typeActivite));
     }
 
     const toggleActivityType = (type) => {
@@ -223,9 +238,9 @@ export default {
     }
 
     const addActivity = async (activityData) => {
-      console.log('Données d\'activité reçues:', activityData);
+      //console.log('Données d\'activité reçues:', activityData);
       if (!activityData || !activityData.date) {
-        console.error('Données d\'activité invalides:', activityData);
+        //console.error('Données d\'activité invalides:', activityData);
         return;
       }
 
@@ -269,14 +284,20 @@ export default {
 
     const loadActivities = async () => {
       try {
-        const start = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1).toISOString();
-        const end = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0).toISOString();
-
-        await store.dispatch('activities/fetchActivities', { start, end });
+        const start = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1)
+        const end = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0)
+        
+        // Charger les activités pour tout le mois
+        await store.dispatch('activities/fetchActivities', {
+          start: start.toISOString(),
+          end: end.toISOString()
+        })
+        
+        console.log('Activités chargées:', store.getters['activities/allActivities'])
       } catch (error) {
-        console.error('Erreur lors du chargement des activités:', error);
+        console.error('Erreur lors du chargement des activités:', error)
         if (error.response?.status === 403) {
-          router.push('/login');
+          router.push('/login')
         }
       }
     }
@@ -290,6 +311,16 @@ export default {
       showActivityModal.value = true;
     }
 
+    const activities = computed(() => {
+      return store.getters['activities/allActivities'];
+    });
+
+    const showActivitiesModal = (client) => {
+      console.log('Showing activities for client:', client)
+      selectedClient.value = client
+      showActivitiesModal.value = true
+    }
+
     onMounted(async () => {
       try {
         selectedDate.value = new Date();
@@ -297,6 +328,10 @@ export default {
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du tableau de bord:', error);
       }
+    });
+
+    onMounted(() => {
+      store.dispatch('activities/fetchActivities');
     });
 
     return {
@@ -321,7 +356,9 @@ export default {
       nextMonth,
       selectedDay,
       showDaySchedule,
-      handleAddActivity
+      handleAddActivity,
+      activities,
+      showActivitiesModal
     }
   }
 }

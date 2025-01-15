@@ -36,7 +36,7 @@
                   :key="activity.id"
                   class="activity-card"
                   :class="[
-                    activity.typeActivite.toLowerCase(),
+                    activity.typeres.toLowerCase(),
                     getActivityStatus(activity)
                   ]"
                   @click="$emit('edit-activity', activity)"
@@ -49,11 +49,11 @@
                     </span>
                   </div>
                   <div class="activity-details">
-                    <template v-if="activity.typeActivite === 'Cours'">
+                    <template v-if="activity.typeres === 'Cours'">
                       <div>Niveau: {{ activity.details.niveau }}</div>
                       <div>Moniteur: {{ getMoniteurName(activity.details.moniteur_id) }}</div>
                     </template>
-                    <template v-else-if="activity.typeActivite === 'Location'">
+                    <template v-else-if="activity.typeres === 'Location'">
                       <div>Client: {{ getClientName(activity.details.client_id) }}</div>
                       <div>Matériel: {{ getMaterielInfo(activity.details.materiel_id) }}</div>
                     </template>
@@ -94,7 +94,7 @@ export default {
   emits: ['close', 'add-activity', 'edit-activity', 'delete-activity'],
 
   setup(props) {
-    console.log('DayScheduleModal props:', props)
+    //console.log('DayScheduleModal props:', props)
 
     const store = useStore()
     const selectedTypes = ref(['Cours', 'Location'])
@@ -127,10 +127,11 @@ export default {
     }
 
     const getActivitiesByHour = (hour) => {
-      console.log('Getting activities for hour:', hour)
-      console.log('Available activities:', props.activities)
+      //console.log('Getting activities for hour:', hour)
+      //console.log('Available activities:', props.activities)
       return props.activities.filter(activity => {
-        if (!selectedTypes.value.includes(activity.typeActivite)) return false
+        console.log('Activity:', activity)
+        if (!selectedTypes.value.includes(activity.typeres)) return false
         const activityHour = parseInt(activity.details.heureDebut.split(':')[0])
         return activityHour === hour
       })
@@ -172,7 +173,7 @@ export default {
     };
 
     const getActivityLabel = (activity) => {
-      switch (activity.typeActivite) {
+      switch (activity.typeres) {
         case 'Cours':
           return `Cours ${activity.details.niveau}`;
         case 'Location':
@@ -180,7 +181,7 @@ export default {
         case 'Reservation':
           return 'Réservation';
         default:
-          return activity.typeActivite;
+          return activity.typeres;
       }
     };
 

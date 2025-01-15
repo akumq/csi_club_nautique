@@ -103,20 +103,28 @@ exports.createActivity = async (req, res) => {
         tarif,
         caution,
         nbParticipants,
-        client_id,
+        client_ids,
         details
     } = req.body;
-
+    console.log(req.body);
     try {
         await pool.query('BEGIN');
 
         // Créer d'abord la réservation
         const reservationResult = await pool.query(
-            'INSERT INTO Reservation (date, duree, typeRes, tarif, caution, nbParticipants, client_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-            [date, duree, typeRes, tarif, caution, nbParticipants, client_id]
+            'INSERT INTO Reservation (date, duree, typeRes, tarif, caution, nbParticipants) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+            [date, duree, typeRes, tarif, caution, nbParticipants]
         );
         
         const reservationId = reservationResult.rows[0].id;
+
+        // Insérer les clients associés à cette réservation
+        for (const client_id of client_ids) {
+            await pool.query(
+                'UPDATE Reservation SET client_id = $1 WHERE id = $2',
+                [client_id, reservationId]
+            );
+        }
 
         // Selon le type, créer soit un cours soit une location
         if (typeRes === 'Cours') {
@@ -134,14 +142,13 @@ exports.createActivity = async (req, res) => {
             );
         } else if (typeRes === 'Location') {
             await pool.query(
-                'INSERT INTO Location (heureDebut, heureFin, materiel_id, etat, nbParticipants, client_id, reservation_id) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                'INSERT INTO Location (heureDebut, heureFin, materiel_id, etat, nbParticipants, reservation_id) VALUES ($1, $2, $3, $4, $5, $6)',
                 [
                     details.heureDebut,
                     details.heureFin,
                     details.materiel_id,
                     'Actif',
                     nbParticipants,
-                    client_id,
                     reservationId
                 ]
             );
@@ -287,6 +294,21 @@ exports.deleteActivity = async (req, res) => {
     } catch (error) {
         await pool.query('ROLLBACK');
         console.error('Erreur lors de la suppression de l\'activité:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+};
+
+exports.getActivitiesByClient = async (req, res) => {
+    const { id } = req.params;
+    console.log('Fetching activities for client ID:', id);
+    try {
+        const result = await pool.query(`
+            SELECT * FROM activities WHERE client_id = $1
+        `, [id]);
+        console.log('Activities found:', result.rows);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des activités:', error);
         res.status(500).json({ message: 'Erreur serveur' });
     }
 };

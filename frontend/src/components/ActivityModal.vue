@@ -46,7 +46,7 @@
                   type="text" 
                   class="form-control" 
                   v-model="clientSearch"
-                  @input="searchClients"
+                  @input="showClientsList = true"
                   placeholder="Rechercher un client..."
                 >
                 <button 
@@ -179,7 +179,7 @@ export default {
     },
     selectedDate: {
       type: Date,
-      required: true
+      required: false
     }
   },
 
@@ -195,13 +195,13 @@ export default {
     const moniteurs = ref([])
 
     const form = ref({
-      date: props.selectedDate.toISOString().split('T')[0],
+      date: '',
       typeRes: 'Cours',
       duree: 1,
       tarif: 0,
       caution: 0,
       nbParticipants: 1,
-      client_id: null,
+      client_ids: [],
       details: {
         heureDebut: '09:00',
         heureFin: '10:00',
@@ -220,6 +220,27 @@ export default {
 
         // Charger les matériels disponibles
         await store.dispatch('materials/fetchAvailableMaterials')
+
+        // Charger les clients
+        await store.dispatch('clients/fetchClients')
+
+        // Si une activité est fournie, initialiser le formulaire
+        if (props.activity) {
+          form.value = {
+            date: props.activity.date,
+            typeRes: props.activity.typeRes,
+            duree: props.activity.duree,
+            tarif: props.activity.tarif,
+            caution: props.activity.caution,
+            nbParticipants: props.activity.nbParticipants,
+            client_id: props.activity.client_id,
+            details: props.activity.details
+          }
+        } else if (props.selectedDate) {
+          form.value.date = props.selectedDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        } else {
+          form.value.date = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+        }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error)
       }
@@ -230,8 +251,9 @@ export default {
       return store.getters['materials/availableMaterials']()
     })
 
-    // Filtrer les clients
+    // Récupérer tous les clients
     const clients = computed(() => store.getters['clients/allClients'])
+
     const filteredClients = computed(() => {
       const search = clientSearch.value.toLowerCase()
       return clients.value.filter(client => 
@@ -275,8 +297,7 @@ export default {
       try {
         const activityData = {
           ...form.value,
-          date: form.value.date,
-          client_id: selectedClient.value?.id
+          client_ids: form.value.client_ids
         }
 
         if (props.activity) {
@@ -311,25 +332,9 @@ export default {
       }
     }
 
-    // Initialiser le formulaire si une activité est fournie
-    if (props.activity) {
-      form.value = {
-        date: props.activity.date,
-        typeRes: props.activity.typeRes,
-        duree: props.activity.duree,
-        tarif: props.activity.tarif,
-        caution: props.activity.caution,
-        nbParticipants: props.activity.nbParticipants,
-        client_id: props.activity.client_id,
-        details: props.activity.details
-      }
-      
-      if (props.activity.client_id) {
-        selectedClient.value = clients.value.find(c => c.id === props.activity.client_id)
-        if (selectedClient.value) {
-          clientSearch.value = `${selectedClient.value.prenom} ${selectedClient.value.nom}`
-        }
-      }
+    const getClientName = (id) => {
+      const client = clients.value.find(c => c.id === id)
+      return client ? `${client.prenom} ${client.nom}` : 'Inconnu'
     }
 
     return {
@@ -344,7 +349,8 @@ export default {
       availableMaterials,
       selectClient,
       handleSubmit,
-      handleDelete
+      handleDelete,
+      getClientName
     }
   }
 }
