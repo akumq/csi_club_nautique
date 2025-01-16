@@ -48,14 +48,14 @@ CREATE TABLE Materiel (
 -- Table Flotteur
 CREATE TABLE Flotteur (
     id SERIAL PRIMARY KEY,
-    capacite INT NOT NULL CHECK (capacite IN (150, 170, 190, 205)),
+    capacite INT NOT NULL,
     materiel_id INT
 );
 
 -- Table Voile
 CREATE TABLE Voile (
     id SERIAL PRIMARY KEY,
-    taille INT NOT NULL CHECK (taille IN (3, 4, 4.5, 4.9, 5.4)),
+    taille INT NOT NULL,
     materiel_id INT
 );
 
