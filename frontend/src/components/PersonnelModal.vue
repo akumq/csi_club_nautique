@@ -71,7 +71,6 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import EnumSelect from '@/components/EnumSelect.vue'
 
 export default {
   name: 'PersonnelModal',
@@ -84,10 +83,6 @@ export default {
   },
 
   emits: ['save', 'close'],
-
-  components: {
-    EnumSelect
-  },
 
   setup(props, { emit }) {
     const loading = ref(false)

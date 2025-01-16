@@ -32,6 +32,11 @@
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link class="nav-link" to="/reparations">
+              <i class="fas fa-wrench"></i> Réparations
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link class="nav-link" to="/personnel">
               <i class="fas fa-user-tie"></i> Personnel
             </router-link>

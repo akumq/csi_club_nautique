@@ -183,3 +183,37 @@ exports.deleteMateriel = async (req, res) => {
         res.status(500).json({ error: 'Une erreur est survenue' });
     }
 };
+
+// Créer une nouvelle réparation
+exports.createRepair = async (req, res) => {
+    const { element, description, dateDebut, dateFin, cout, materiel_id } = req.body;
+
+    // Validation des champs requis
+    if (!element || !description || !dateDebut || !cout || !materiel_id) {
+        return res.status(400).json({ error: "Tous les champs sont obligatoires" });
+    }
+
+    try {
+        const result = await pool.query(`
+            INSERT INTO Reparation (element, description, dateDebut, dateFin, cout, materiel_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+        `, [element, description, dateDebut, dateFin, cout, materiel_id]);
+
+        res.status(201).json({ message: 'Réparation créée avec succès', id: result.rows[0].id });
+    } catch (err) {
+        console.error('Erreur lors de la création de la réparation', err);
+        res.status(500).json({ error: 'Une erreur est survenue' });
+    }
+};
+
+// Récupérer toutes les réparations
+exports.getRepairs = async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM Reparation');
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des réparations', err);
+        res.status(500).json({ error: 'Une erreur est survenue' });
+    }
+};

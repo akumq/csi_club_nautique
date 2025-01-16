@@ -3,6 +3,8 @@ import store from '@/store'
 import OffresView from '@/views/Offres.vue'
 import ParametresView from '@/views/Parametres.vue'
 import PartenairesView from '@/views/Partenaires.vue'
+import MaterielsView from '@/views/Materiels.vue'
+import RepairsView from '@/views/Repairs.vue'
 
 const routes = [
   {
@@ -32,7 +34,7 @@ const routes = [
   {
     path: '/materiels',
     name: 'Materiels',
-    component: () => import('@/views/Materiels.vue'),
+    component: MaterielsView,
     meta: { requiresAuth: true }
   },
   {
@@ -52,6 +54,11 @@ const routes = [
     name: 'Parametres',
     component: ParametresView,
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/reparations',
+    name: 'Repairs',
+    component: RepairsView
   },
   {
     path: '/:pathMatch(.*)*',

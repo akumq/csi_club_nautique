@@ -4,7 +4,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            {{ formatDate(date) }}
+            {{ formatDate(new Date(date.getTime() - 86400000)) }}
           </h5>
           <button type="button" class="btn-close" @click="$emit('close')"></button>
         </div>

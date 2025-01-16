@@ -3,7 +3,7 @@ CREATE TYPE ENiveau AS ENUM ('Débutant', 'Intermédiaire', 'Avancé');
 CREATE TYPE EEtat AS ENUM ('Actif', 'Annulé', 'Terminé');
 CREATE TYPE EType_Res AS ENUM ('Cours', 'Location');
 CREATE TYPE EStatut AS ENUM ('Disponible', 'En maintenance', 'Hors service', 'Réservé');
-CREATE TYPE EType_Bateau AS ENUM ('Pedalo','Stand Up Paddle', 'Catamaran', 'Planche à voile', 'Hors-Bord');
+CREATE TYPE EType_Bateau AS ENUM ('Pedalo','Paddle', 'Catamaran', 'Planche à voile', 'Hors-bord');
 CREATE TYPE EType_Materiel AS ENUM ('Voile', 'Flotteur', 'PiedMat', 'Bateau');
 
 -- Création des tables sans les clés étrangères
@@ -48,14 +48,14 @@ CREATE TABLE Materiel (
 -- Table Flotteur
 CREATE TABLE Flotteur (
     id SERIAL PRIMARY KEY,
-    capacite INT NOT NULL,
+    capacite INT NOT NULL CHECK (capacite IN (150, 170, 190, 205)),
     materiel_id INT
 );
 
 -- Table Voile
 CREATE TABLE Voile (
     id SERIAL PRIMARY KEY,
-    taille INT NOT NULL,
+    taille INT NOT NULL CHECK (taille IN (3, 4, 4.5, 4.9, 5.4)),
     materiel_id INT
 );
 
@@ -205,3 +205,86 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO moniteur;
 
 -- Ajouter cette ligne pour permettre à l'administrateur de créer des objets
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO administrateur;
+
+--TRIGGERS
+
+--Vérifier le niveau du client pour le cours
+CREATE OR REPLACE FUNCTION verifier_niveau_cours() RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.niveau <> (SELECT niveau FROM Client WHERE id = NEW.client_id) THEN
+        RAISE EXCEPTION 'Le niveau du client ne correspond pas au niveau du cours';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER verifier_niveau_cours
+BEFORE INSERT OR UPDATE ON Cours
+FOR EACH ROW
+EXECUTE FUNCTION verifier_niveau_cours();
+
+--Vérifier que le matériel est disponible pour une location
+CREATE OR REPLACE FUNCTION verifier_disponibilite_materiel() RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT statut FROM Materiel WHERE id = NEW.materiel_id) <> 'Disponible' THEN
+        RAISE EXCEPTION 'Le matériel n''est pas disponible pour la location';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER verifier_disponibilite_materiel
+BEFORE INSERT OR UPDATE ON Location
+FOR EACH ROW
+EXECUTE FUNCTION verifier_disponibilite_materiel();
+
+--Mettre le à jour le matériel disponible après une réparation
+CREATE OR REPLACE FUNCTION mettre_a_jour_statut_materiel() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Materiel
+    SET statut = 'Disponible'
+    WHERE id = NEW.materiel_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER mettre_a_jour_statut_materiel
+AFTER UPDATE ON Reparation
+FOR EACH ROW
+WHEN (OLD.dateFin IS DISTINCT FROM NEW.dateFin AND NEW.dateFin IS NOT NULL)
+EXECUTE FUNCTION mettre_a_jour_statut_materiel();
+
+--Mettre le matériel à réservé lorsqu'il est ajouté à un cours ou à une location
+CREATE OR REPLACE FUNCTION changer_statut_materiel_reservation() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Materiel
+    SET statut = 'Réservé'
+    WHERE id = NEW.materiel_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER changer_statut_materiel_cours
+BEFORE INSERT ON Cours
+FOR EACH ROW
+EXECUTE FUNCTION changer_statut_materiel_reservation();
+
+CREATE TRIGGER changer_statut_materiel_location
+BEFORE INSERT ON Location
+FOR EACH ROW
+EXECUTE FUNCTION changer_statut_materiel_reservation();
+
+-- Vérifier qu'on ne peut pas louer le hors-bord
+CREATE OR REPLACE FUNCTION verifier_type_bateau_location() RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT type FROM Bateau WHERE id = NEW.materiel_id) = 'Hors-bord' THEN
+        RAISE EXCEPTION 'Impossible de louer un bateau de type Hors-bord';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER verifier_type_bateau_location
+BEFORE INSERT OR UPDATE ON Location
+FOR EACH ROW
+EXECUTE FUNCTION verifier_type_bateau_location();

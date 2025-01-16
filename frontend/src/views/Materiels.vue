@@ -5,6 +5,7 @@
       <button class="btn btn-primary" @click="showModal()">
         <i class="fas fa-plus"></i> Nouveau Matériel
       </button>
+
     </div>
 
     <!-- Filtres -->
@@ -98,6 +99,12 @@
                   >
                     <i class="fas fa-trash"></i>
                   </button>
+                  <button 
+                    class="btn btn-sm btn-outline-info"
+                    @click="openRepairModal(materiel)"
+                  >
+                    <i class="fas fa-wrench"></i> En Réparation
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -120,6 +127,13 @@
       @save="handleMaintenanceSave"
       @close="closeMaintenanceModal"
     />
+
+    <RepairModal 
+      v-if="showRepairForm"
+      :materiel_id="selectedMaterial.id"
+      @save="handleRepairSave"
+      @close="closeRepairModal"
+    />
   </div>
 </template>
 
@@ -128,19 +142,22 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import MaterialModal from '@/components/MaterialModal.vue'
 import MaintenanceModal from '@/components/MaintenanceModal.vue'
+import RepairModal from '@/components/RepairModal.vue'
 
 export default {
   name: 'MaterielsView',
 
   components: {
     MaterialModal,
-    MaintenanceModal
+    MaintenanceModal,
+    RepairModal
   },
 
   setup() {
     const store = useStore()
     const showForm = ref(false)
     const showMaintenanceForm = ref(false)
+    const showRepairForm = ref(false)
     const selectedMaterial = ref(null)
     const filters = ref({
       type: '',
@@ -187,6 +204,27 @@ export default {
     const closeMaintenanceModal = () => {
       showMaintenanceForm.value = false
       selectedMaterial.value = null
+    }
+
+    const openRepairModal = (materiel) => {
+      selectedMaterial.value = materiel
+      showRepairForm.value = true
+    }
+
+    const closeRepairModal = () => {
+      showRepairForm.value = false
+      selectedMaterial.value = null
+    }
+
+    const handleRepairSave = async (repairData) => {
+      try {
+        repairData.materiel_id = selectedMaterial.value.id
+        await store.dispatch('materials/createRepair', repairData)
+        await store.dispatch('materials/fetchMateriels')
+        closeRepairModal()
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde de la réparation:', error)
+      }
     }
 
     const handleSave = async (materialData) => {
@@ -242,6 +280,7 @@ export default {
     return {
       showForm,
       showMaintenanceForm,
+      showRepairForm,
       selectedMaterial,
       filters,
       filteredMaterials,
@@ -253,7 +292,10 @@ export default {
       closeMaintenanceModal,
       handleSave,
       handleMaintenanceSave,
-      confirmDelete
+      confirmDelete,
+      openRepairModal,
+      closeRepairModal,
+      handleRepairSave
     }
   }
 }

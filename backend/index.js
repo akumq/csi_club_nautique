@@ -18,6 +18,7 @@ const materielRoutes = require('./routes/materiels.routes');
 const offresRoutes = require('./routes/offres.routes');
 const activitiesRoutes = require('./routes/activities.routes');
 const partenairesRoutes = require('./routes/partenaires.routes');
+const reparationsRoutes = require('./routes/reparations.routes');
 
 // Auth
 const { authorizeRole } = require('./middleware/auth');
@@ -46,7 +47,8 @@ app.use('/api/enum', enumRoutes);
 app.use('/api/materiels', materielRoutes);
 app.use('/api/offres', offresRoutes);
 app.use('/api/activities', activitiesRoutes);
-app.use('/api/partenaires', partenairesRoutes); 
+app.use('/api/partenaires', partenairesRoutes);
+app.use('/api/reparations', reparationsRoutes);
 
 // server
 app.listen(process.env.PORT, () => {

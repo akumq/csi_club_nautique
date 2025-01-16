@@ -68,13 +68,12 @@ export default {
 
     async createMaterial({ commit }, materialData) {
       try {
-        const material = await ApiService.post('/materiels', materialData)
-        const materials = await ApiService.get('/materiels')
-        commit('SET_MATERIALS', materials)
-        return material
+        const material = await ApiService.post('/materiels', materialData);
+        commit('ADD_MATERIAL', material);
+        return material;
       } catch (error) {
-        commit('SET_ERROR', error.message)
-        throw error
+        commit('SET_ERROR', error.message);
+        throw error;
       }
     },
 
@@ -135,6 +134,35 @@ export default {
         commit('UPDATE_MATERIAL_STATUS', { id, status });
       } catch (error) {
         console.error('Erreur lors de la mise à jour du statut du matériel:', error);
+        throw error;
+      }
+    },
+
+    async createRepair({ commit }, repairData) {
+      try {
+        await ApiService.post('/reparations', repairData);
+      } catch (error) {
+        commit('SET_ERROR', error.message);
+        throw error;
+      }
+    },
+
+    async fetchRepairs({ commit }) {
+        try {
+            const response = await ApiService.get('/reparations'); // Assurez-vous que cette route existe
+            return response;
+        } catch (error) {
+            commit('SET_ERROR', error.message);
+            throw error;
+        }
+    },
+
+    async deleteRepair({ commit }, id) {
+      try {
+        await ApiService.delete(`/reparations/${id}`);
+        // Optionnel : Vous pouvez également mettre à jour l'état des réparations ici
+      } catch (error) {
+        commit('SET_ERROR', error.message);
         throw error;
       }
     }
