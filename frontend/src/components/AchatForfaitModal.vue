@@ -20,7 +20,7 @@
 
             <div class="mb-3">
               <label class="form-label">Partenaire</label>
-              <select class="form-control" v-model="selectedPartenaire" required>
+              <select class="form-control" v-model="selectedPartenaire">
                 <option value="">Sélectionnez un partenaire</option>
                 <option v-for="partenaire in partenaires" :key="partenaire.id" :value="partenaire">
                   {{ partenaire.nomcamping }}
