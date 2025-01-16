@@ -54,24 +54,9 @@
         </ul>
         
         <ul class="navbar-nav">
-          <li class="nav-item dropdown">
-            <a 
-              class="nav-link dropdown-toggle" 
-              href="#" 
-              id="navbarDropdown" 
-              role="button" 
-              data-bs-toggle="dropdown"
-            >
-              <i class="fas fa-user"></i> {{ currentUser?.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item" href="#" @click.prevent="handleLogout">
-                  <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </a>
-              </li>
-            </ul>
-          </li>
+          <button class="btn btn-outline-danger" href="#" @click.prevent="handleLogout">
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
+          </button>
         </ul>
       </div>
     </div>
