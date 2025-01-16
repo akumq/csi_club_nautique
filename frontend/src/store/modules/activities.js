@@ -19,7 +19,7 @@ export default {
       if (!date) return []
       const targetDate = new Date(date).toISOString().split('T')[0]
       return state.activities.filter(activity => {
-        if (activity){
+        if (activity && activity.date){
           const activityDate = new Date(activity.date).toISOString().split('T')[0]
           return activityDate === targetDate
         }
@@ -49,20 +49,6 @@ export default {
     // Récupère les activités par client
     getActivitiesByClient: state => clientId => {
       return state.activities.filter(activity => activity.client_id === clientId)
-    },
-
-    // Vérifie les conflits d'horaires
-    hasTimeConflict: state => (newActivity, excludeId = null) => {
-      return state.activities.some(activity => {
-        if (activity.id === excludeId) return false
-
-        const newStart = new Date(`${newActivity.date}T${newActivity.details.heureDebut}`)
-        const newEnd = new Date(`${newActivity.date}T${newActivity.details.heureFin}`)
-        const activityStart = new Date(`${activity.date}T${activity.details.heureDebut}`)
-        const activityEnd = new Date(`${activity.date}T${activity.details.heureFin}`)
-
-        return (newStart < activityEnd && newEnd > activityStart)
-      })
     },
 
     // Getter pour le calendrier
@@ -141,30 +127,28 @@ export default {
       }
     },
 
-    async createActivity({ commit, getters }, activityData) {
-      // Vérifier les conflits d'horaires
-      if (getters.hasTimeConflict(activityData)) {
-        throw new Error('Conflit d\'horaires avec une activité existante')
-      }
-
+    async createActivity({ commit }, activityData) {
       try {
         const activity = await ApiService.post('/activities', activityData)
         commit('ADD_ACTIVITY', activity)
+        window.location.reload();
         return activity
       } catch (error) {
         commit('SET_ERROR', error.message)
+        window.location.reload();
         throw error
       }
     },
 
     async updateActivity({ commit }, { id, data }) {
-      // Vérifier les conflits d'horaires en excluant l'activité en cours de modification
       try {
         const activity = await ApiService.put(`/activities/${id}`, data)
         commit('UPDATE_ACTIVITY', activity)
+        window.location.reload();
         return activity
       } catch (error) {
         commit('SET_ERROR', error.message)
+        window.location.reload();
         throw error
       }
     },
@@ -173,8 +157,10 @@ export default {
       try {
         await ApiService.delete(`/activities/${id}`)
         commit('DELETE_ACTIVITY', id)
+        window.location.reload();
       } catch (error) {
         commit('SET_ERROR', error.message)
+        window.location.reload();
         throw error
       }
     },

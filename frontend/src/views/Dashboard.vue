@@ -255,18 +255,20 @@ export default {
 
     const handleActivitySave = async (activityData) => {
       try {
+
         if (selectedActivity.value) {
           await store.dispatch('activities/updateActivity', {
             id: selectedActivity.value.id,
             data: activityData
-          })
+          });
         } else {
-          await store.dispatch('activities/createActivity', activityData)
+          await store.dispatch('activities/createActivity', activityData);
         }
-        closeActivityModal()
-        await loadActivities()
+        closeActivityModal();
+        
+        window.location.reload();
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error)
+        console.error('Erreur lors de la sauvegarde de l\'activité:', error);
       }
     }
 
