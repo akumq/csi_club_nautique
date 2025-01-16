@@ -18,12 +18,14 @@ export default {
     getActivitiesByDate: state => date => {
       if (!date) return []
       const targetDate = new Date(date).toISOString().split('T')[0]
-      return state.activities.filter(activity => {
+      const activities = state.activities.filter(activity => {
         if (activity && activity.date){
           const activityDate = new Date(activity.date).toISOString().split('T')[0]
           return activityDate === targetDate
         }
       })
+      console.log(date, " : ",activities)
+      return activities
     },
 
     // Récupère les activités pour un mois spécifique
@@ -51,14 +53,6 @@ export default {
       return state.activities.filter(activity => activity.client_id === clientId)
     },
 
-    // Getter pour le calendrier
-    activitiesByDate: state => date => {
-      if (!date) return []
-      return state.activities.filter(activity => {
-        const activityDate = new Date(activity.date)
-        return activityDate.toDateString() === date.toDateString()
-      })
-    },
 
     // Getter pour les activités du jour sélectionné
     activitiesForSelectedDay: state => date => {
@@ -168,6 +162,7 @@ export default {
     async fetchActivitiesByDate({ commit }, date) {
       commit('SET_LOADING', true)
       try {
+        console.log(date)
         const activities = await ApiService.get(`/activities?date=${date}`)
         return activities
       } catch (error) {

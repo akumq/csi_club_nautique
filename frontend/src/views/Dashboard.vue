@@ -158,7 +158,7 @@ export default {
       prevMonth.setDate(0)
   
       for (let i = firstDay - 1; i >= 0; i--) {
-        const dayDate = new Date(prevMonth.getTime() - i * 24 * 60 * 60 * 1000)
+        const dayDate = new Date(prevMonth.getTime() - (i+1) * 24 * 60 * 60 * 1000)
         const formattedDate = dayDate.toISOString().split('T')[0]
         days.push({
           number: prevMonth.getDate() - i,
@@ -172,7 +172,7 @@ export default {
       // Jours du mois actuel
       const today = new Date()
       for (let i = 1; i <= lastDay.getDate(); i++) {
-        const currentDate = new Date(date.getFullYear(), date.getMonth(), i)
+        const currentDate = new Date(date.getFullYear(), date.getMonth(), (i+1))
         const formattedDate = currentDate.toISOString().split('T')[0]
         days.push({
           number: i,
@@ -186,7 +186,7 @@ export default {
       // Jours du mois suivant
       const remainingDays = 42 - days.length
       for (let i = 1; i <= remainingDays; i++) {
-        const nextDate = new Date(date.getFullYear(), date.getMonth() + 1, i)
+        const nextDate = new Date(date.getFullYear(), date.getMonth() + 1, (i+1))
         const formattedDate = nextDate.toISOString().split('T')[0]
         days.push({
           number: i,
@@ -255,6 +255,7 @@ export default {
 
     const handleActivitySave = async (activityData) => {
       try {
+
 
         if (selectedActivity.value) {
           await store.dispatch('activities/updateActivity', {
