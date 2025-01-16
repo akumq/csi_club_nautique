@@ -88,8 +88,7 @@ exports.achatForfait = async (req, res) => {
     const { client_id, offre_id, adresse, partenaire_id } = req.body;
 
     try {
-        let partenaire = null; // Initialiser partenaire à null
-        // Vérifier que le partenaire existe et récupérer ses informations
+        let partenaire = null;
         const partenaireResult = await pool.query('SELECT * FROM Partenaire WHERE id = $1', [partenaire_id]);
         if (partenaireResult.rows.length > 0) {
             partenaire = partenaireResult.rows[0];

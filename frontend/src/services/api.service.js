@@ -76,8 +76,5 @@ export default {
 
   handleError(error) {
     console.error('API Error:', error)
-    // Vous pouvez utiliser cette ligne pour afficher l'erreur dans une notification
-    // const errorMessage = error.response?.data?.message || 'Une erreur est survenue'
-    // Ici vous pouvez ajouter une notification d'erreur
   }
 } 
