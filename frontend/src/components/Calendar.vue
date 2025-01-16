@@ -96,7 +96,7 @@ export default {
     const selectedDay = ref(null)
     const selectedActivity = ref(null)
     const showActivityForm = ref(false)
-    const selectedTypes = ref(['Cours', 'Location', 'Reservation'])
+    const selectedTypes = ref(['Cours', 'Location'])
 
     const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
     const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
@@ -228,9 +228,8 @@ export default {
     }
 
     const filterDayActivities = (activities) => {
-      if (!activities) return [];
       return activities
-        .filter(activity => selectedTypes.value.includes(activity.typeActivite))
+        .filter(activity => selectedTypes.value.includes(activity.typeres))
         .sort((a, b) => {
           return a.details.heureDebut?.localeCompare(b.details.heureDebut || '');
         })
@@ -243,8 +242,6 @@ export default {
           return `Cours ${activity.details.niveau}`;
         case 'Location':
           return 'Location';
-        case 'Reservation':
-          return 'Réservation';
         default:
           return activity.typeActivite;
       }
@@ -284,7 +281,6 @@ export default {
       filterDayActivities,
       getActivityLabel,
       formatTime,
-      selectedTypes,
       editActivity,
       loadMonthActivities
     }

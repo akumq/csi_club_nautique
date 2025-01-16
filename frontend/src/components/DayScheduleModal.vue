@@ -127,14 +127,11 @@ export default {
     }
 
     const getActivitiesByHour = (hour) => {
-      //console.log('Getting activities for hour:', hour)
-      //console.log('Available activities:', props.activities)
       return props.activities.filter(activity => {
-        console.log('Activity:', activity)
-        if (!selectedTypes.value.includes(activity.typeres)) return false
-        const activityHour = parseInt(activity.details.heureDebut.split(':')[0])
-        return activityHour === hour
-      })
+        if (!selectedTypes.value.includes(activity.typeres)) return false;
+        const activityHour = parseInt(activity.details.heureDebut.split(':')[0]);
+        return activityHour === hour;
+      });
     }
 
     const getMoniteurName = (id) => {
@@ -178,8 +175,6 @@ export default {
           return `Cours ${activity.details.niveau}`;
         case 'Location':
           return 'Location';
-        case 'Reservation':
-          return 'Réservation';
         default:
           return activity.typeres;
       }

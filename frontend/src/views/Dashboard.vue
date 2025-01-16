@@ -58,7 +58,7 @@
           
           <div class="activities-list">
             <div 
-              v-for="activity in day.activities"
+              v-for="activity in filterActivities(day.activities)"
               :key="activity.id"
               class="activity-item"
               :class="activity.typeres.toLowerCase()"
@@ -100,15 +100,6 @@
       @save="handleActivitySave"
       @close="closeActivityModal"
     />
-
-    <div>
-      <h2>Liste des Activités</h2>
-      <ul>
-        <li v-for="activity in activities" :key="activity.id">
-          {{ activity.details }} - {{ activity.date }}
-        </li>
-      </ul>
-    </div>
   </div>
 </template>
 
@@ -131,7 +122,7 @@ export default {
     const store = useStore()
     const router = useRouter()
     const currentDate = ref(new Date())
-    const selectedTypes = ref(['Cours', 'Location', 'Reservation'])
+    const selectedTypes = ref(['Cours', 'Location'])
     const showActivityModal = ref(false)
     const selectedActivity = ref(null)
     const selectedDate = ref(null)
@@ -140,7 +131,7 @@ export default {
     const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
     const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
                    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-    const activityTypes = ['Cours', 'Location', 'Reservation']
+    const activityTypes = ['Cours', 'Location']
 
     const currentMonthName = computed(() => months[currentDate.value.getMonth()])
     const currentYear = computed(() => currentDate.value.getFullYear())
@@ -210,9 +201,7 @@ export default {
     })
 
     const filterActivities = (activities) => {
-      console.log(activities.filter(activity => selectedTypes.value.includes(activity.typeActivite)));
-      if (!Array.isArray(activities)) return [];
-      return activities.filter(activity => selectedTypes.value.includes(activity.typeActivite));
+      return activities.filter(activity => selectedTypes.value.includes(activity.typeres));
     }
 
     const toggleActivityType = (type) => {
@@ -228,7 +217,6 @@ export default {
       const icons = {
         'Cours': 'fas fa-chalkboard-teacher',
         'Location': 'fas fa-key',
-        'Reservation': 'fas fa-calendar-check'
       }
       return icons[type]
     }

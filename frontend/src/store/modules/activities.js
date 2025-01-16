@@ -19,8 +19,10 @@ export default {
       if (!date) return []
       const targetDate = new Date(date).toISOString().split('T')[0]
       return state.activities.filter(activity => {
-        const activityDate = new Date(activity.date).toISOString().split('T')[0]
-        return activityDate === targetDate
+        if (activity){
+          const activityDate = new Date(activity.date).toISOString().split('T')[0]
+          return activityDate === targetDate
+        }
       })
     },
 
@@ -87,6 +89,10 @@ export default {
     // Getter pour obtenir une activité par son ID
     getActivityById: state => id => {
       return state.activities.find(activity => activity.id === id)
+    },
+
+    getActivitiesByType: state => type => {
+      return state.activities.filter(activity => activity.typeres === type);
     }
   },
 
