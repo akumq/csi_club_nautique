@@ -53,15 +53,6 @@
               <input type="text" class="form-control" v-model="form.permis" required>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Statut</label>
-              <EnumSelect
-                enum-name="EStatut"
-                v-model="form.statut"
-                required
-              />
-            </div>
-
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" @click="$emit('close')">
                 Annuler
