@@ -89,7 +89,7 @@
                   </button>
                   <button 
                     class="btn btn-sm btn-outline-warning me-2"
-                    @click="showMaintenanceModal(materiel)"
+                    @click="openRepairModal(materiel)"
                   >
                     <i class="fas fa-wrench"></i>
                   </button>
@@ -98,12 +98,6 @@
                     @click="confirmDelete(materiel)"
                   >
                     <i class="fas fa-trash"></i>
-                  </button>
-                  <button 
-                    class="btn btn-sm btn-outline-info"
-                    @click="openRepairModal(materiel)"
-                  >
-                    <i class="fas fa-wrench"></i> En Réparation
                   </button>
                 </td>
               </tr>
