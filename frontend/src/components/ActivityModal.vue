@@ -237,7 +237,7 @@ export default {
 
         // Charger les clients
         const clientsList = await store.dispatch('clients/fetchClients')
-        clients.value = clientsList
+        clients.value = clientsList || [];
 
         // Si une activité est fournie, initialiser le formulaire
         if (props.activity) {
@@ -248,7 +248,7 @@ export default {
             tarif: props.activity.tarif,
             caution: props.activity.caution,
             nbParticipants: props.activity.nbParticipants,
-            client_id: props.activity.client_id,
+            client_ids: props.activity.client_ids || [],
             details: props.activity.details
           }
         } else if (props.selectedDate) {
