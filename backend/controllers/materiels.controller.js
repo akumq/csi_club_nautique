@@ -119,28 +119,49 @@ exports.updateMateriel = async (req, res) => {
 
         const materielId = result.rows[0].id;
 
-        // Mettre à jour ou insérer les données spécifiques selon le type
+        // Vérifier si les données spécifiques existent déjà
         if (type === 'Voile') {
-            await pool.query(`
-                INSERT INTO Voile (taille, materiel_id) 
-                VALUES ($1, $2)
-                ON CONFLICT (materiel_id) 
-                DO UPDATE SET taille = $1
-            `, [taille, materielId]);
+            const existingVoile = await pool.query('SELECT * FROM Voile WHERE materiel_id = $1', [materielId]);
+            if (existingVoile.rows.length > 0) {
+                await pool.query(`
+                    UPDATE Voile
+                    SET taille = $1
+                    WHERE materiel_id = $2
+                `, [taille, materielId]);
+            } else {
+                await pool.query(`
+                    INSERT INTO Voile (taille, materiel_id) 
+                    VALUES ($1, $2)
+                `, [taille, materielId]);
+            }
         } else if (type === 'Flotteur') {
-            await pool.query(`
-                INSERT INTO Flotteur (capacite, materiel_id) 
-                VALUES ($1, $2)
-                ON CONFLICT (materiel_id) 
-                DO UPDATE SET capacite = $1
-            `, [capacite, materielId]);
+            const existingFlotteur = await pool.query('SELECT * FROM Flotteur WHERE materiel_id = $1', [materielId]);
+            if (existingFlotteur.rows.length > 0) {
+                await pool.query(`
+                    UPDATE Flotteur
+                    SET capacite = $1
+                    WHERE materiel_id = $2
+                `, [capacite, materielId]);
+            } else {
+                await pool.query(`
+                    INSERT INTO Flotteur (capacite, materiel_id) 
+                    VALUES ($1, $2)
+                `, [capacite, materielId]);
+            }
         } else if (type === 'Bateau') {
-            await pool.query(`
-                INSERT INTO Bateau (type, materiel_id) 
-                VALUES ($1, $2)
-                ON CONFLICT (materiel_id) 
-                DO UPDATE SET type = $1
-            `, [bateau_type, materielId]);
+            const existingBateau = await pool.query('SELECT * FROM Bateau WHERE materiel_id = $1', [materielId]);
+            if (existingBateau.rows.length > 0) {
+                await pool.query(`
+                    UPDATE Bateau
+                    SET type = $1
+                    WHERE materiel_id = $2
+                `, [bateau_type, materielId]);
+            } else {
+                await pool.query(`
+                    INSERT INTO Bateau (type, materiel_id) 
+                    VALUES ($1, $2)
+                `, [bateau_type, materielId]);
+            }
         } else if (type === 'PiedMat') {
             await pool.query(`
                 INSERT INTO PiedMat (materiel_id) 
@@ -164,6 +185,9 @@ exports.updateMateriel = async (req, res) => {
 exports.deleteMateriel = async (req, res) => {
     const { id } = req.params;
     try {
+        // Supprimer les réparations associées
+        await pool.query('DELETE FROM Reparation WHERE materiel_id = $1', [id]);
+
         // Supprimer les références dans les tables associées (Flotteur, Voile, Bateau, PiedMat)
         await pool.query('DELETE FROM Flotteur WHERE materiel_id = $1', [id]);
         await pool.query('DELETE FROM Voile WHERE materiel_id = $1', [id]);
