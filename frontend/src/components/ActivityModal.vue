@@ -40,36 +40,46 @@
 
             <!-- Client -->
             <div class="mb-3">
-              <label class="form-label">Client</label>
+              <label class="form-label">Clients</label>
               <div class="input-group">
                 <input 
                   type="text" 
                   class="form-control" 
                   v-model="clientSearch"
-                  @input="showClientsList = true"
                   placeholder="Rechercher un client..."
                 >
                 <button 
                   class="btn btn-outline-secondary" 
                   type="button"
-                  @click="showClientsList = !showClientsList"
                 >
                   <i class="fas fa-search"></i>
                 </button>
               </div>
-              <div v-if="showClientsList && filteredClients.length > 0" class="list-group mt-2">
-                <button
+              <div v-if="filteredClients.length > 0" class="list-group mt-2">
+                <div
                   v-for="client in filteredClients"
                   :key="client.id"
-                  type="button"
-                  class="list-group-item list-group-item-action"
-                  @click="selectClient(client)"
+                  class="list-group-item"
                 >
-                  {{ client.prenom }} {{ client.nom }}
-                </button>
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox"
+                      :value="client.id"
+                      v-model="form.client_ids"
+                      :id="'client-' + client.id"
+                    >
+                    <label class="form-check-label" :for="'client-' + client.id">
+                      {{ client.prenom }} {{ client.nom }} - {{ client.quantiteforfait }}
+                    </label>
+                  </div>
+                </div>
               </div>
-              <div v-if="selectedClient" class="mt-2">
-                Client sélectionné: {{ selectedClient.prenom }} {{ selectedClient.nom }}
+              <div v-if="form.client_ids.length > 0" class="mt-2">
+                Clients sélectionnés: 
+                <span v-for="clientId in form.client_ids" :key="clientId">
+                  {{ getClientName(clientId) }}<span v-if="!$last">, </span>
+                </span>
               </div>
             </div>
 
@@ -125,7 +135,7 @@
                 <input type="number" step="0.5" class="form-control" v-model.number="form.duree" required>
               </div>
               <div class="col-md-4 mb-3">
-                <label class="form-label">Tarif (€)</label>
+                <label class="form-label">Tarif (forfait)</label>
                 <input type="number" step="0.01" class="form-control" v-model.number="form.tarif" required>
               </div>
               <div class="col-md-4 mb-3">
@@ -164,7 +174,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import EnumSelect from './EnumSelect.vue'
 
@@ -196,6 +206,7 @@ export default {
     const showClientsList = ref(false)
     const selectedClient = ref(null)
     const moniteurs = ref([])
+    const clients = ref([])
 
     const form = ref({
       date: '',
@@ -225,7 +236,8 @@ export default {
         await store.dispatch('materials/fetchMateriels')
 
         // Charger les clients
-        await store.dispatch('clients/fetchClients')
+        const clientsList = await store.dispatch('clients/fetchClients')
+        clients.value = clientsList
 
         // Si une activité est fournie, initialiser le formulaire
         if (props.activity) {
@@ -257,15 +269,14 @@ export default {
     })
 
     // Récupérer tous les clients
-    const clients = computed(() => store.getters['clients/allClients'])
-
     const filteredClients = computed(() => {
-      const search = clientSearch.value.toLowerCase()
+      const search = clientSearch.value.toLowerCase();
       return clients.value.filter(client => 
-        client.nom.toLowerCase().includes(search) ||
+        (client.nom.toLowerCase().includes(search) ||
         client.prenom.toLowerCase().includes(search) ||
-        client.email?.toLowerCase().includes(search)
-      )
+        client.email?.toLowerCase().includes(search)) &&
+        client.quantiteforfait >= form.value.tarif // Vérifie si la quantité de forfait est suffisante
+      );
     })
 
     // Sélectionner un client
@@ -294,32 +305,54 @@ export default {
       return true
     }
 
+    // Watcher pour le tarif
+    watch(() => form.value.tarif, (newTarif) => {
+        // Filtrer les clients en fonction du tarif
+        form.value.client_ids = form.value.client_ids.filter(clientId => {
+            const client = clients.value.find(c => c.id === clientId);
+            return client && client.quantiteforfait >= newTarif;
+        });
+    });
+
+    const validateClients = () => {
+        for (const clientId of form.value.client_ids) {
+            const client = clients.value.find(c => c.id === clientId);
+            if (client && client.quantiteforfait < form.value.tarif) {
+                return false; // Retourne faux si un client a une quantité de forfait insuffisante
+            }
+        }
+        return true; // Tous les clients sont valides
+    }
+
     // Gérer la soumission
     const handleSubmit = async () => {
-      if (!validateTimes()) return
-
-      loading.value = true
-      try {
-        const activityData = {
-          ...form.value,
-          client_ids: form.value.client_ids
+        if (!validateTimes() || !validateClients()) {
+            alert("Un ou plusieurs clients n'ont pas une quantité de forfait suffisante.");
+            return;
         }
 
-        if (props.activity) {
-          await store.dispatch('activities/updateActivity', {
-            id: props.activity.id,
-            data: activityData
-          })
-        } else {
-          await store.dispatch('activities/createActivity', activityData)
-        }
+        loading.value = true;
+        try {
+            const activityData = {
+                ...form.value,
+                client_ids: form.value.client_ids
+            };
 
-        emit('save')
-      } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error)
-      } finally {
-        loading.value = false
-      }
+            if (props.activity) {
+                await store.dispatch('activities/updateActivity', {
+                    id: props.activity.id,
+                    data: activityData
+                });
+            } else {
+                await store.dispatch('activities/createActivity', activityData);
+            }
+
+            emit('save');
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde:', error);
+        } finally {
+            loading.value = false;
+        }
     }
 
     // Gérer la suppression

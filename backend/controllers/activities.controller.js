@@ -110,6 +110,37 @@ exports.createActivity = async (req, res) => {
     try {
         await pool.query('BEGIN');
 
+        // Vérifier si client_ids est un tableau
+        if (Array.isArray(client_ids) && client_ids.length > 0) {
+            // Vérifier la quantité de forfait pour chaque client
+            for (const client_id of client_ids) {
+                console.log(client_id);
+                const clientResult = await pool.query('SELECT quantiteForfait FROM Client WHERE id = $1', [client_id]);
+                if (clientResult.rows.length === 0) {
+                    await pool.query('ROLLBACK');
+                    return res.status(404).json({ message: 'Client non trouvé' });
+                }
+
+                const quantiteforfait = clientResult.rows[0].quantiteForfait;
+                console.log("forfait", quantiteforfait);
+                console.log("tarif", tarif);
+
+                // Si le tarif est supérieur à la quantité de forfait, générer une facture négative et annuler la réservation
+                if (tarif > quantiteforfait) {
+                    await pool.query('ROLLBACK');
+                    return res.status(400).json({ 
+                        message: 'Le tarif de la réservation est trop élevé par rapport à la quantité de forfait du client.',
+                    });
+                }
+
+                // Mettre à jour la quantité de forfait du client
+                await pool.query(
+                    'UPDATE Client SET quantiteForfait = quantiteForfait - $1 WHERE id = $2',
+                    [tarif, client_id]
+                );
+            }
+        }
+
         // Créer d'abord la réservation
         const reservationResult = await pool.query(
             'INSERT INTO Reservation (date, duree, typeRes, tarif, caution, nbParticipants) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
